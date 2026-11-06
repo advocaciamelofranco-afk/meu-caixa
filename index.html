@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f6b43">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Meu Caixa">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<title>Meu Caixa — controle de gastos e metas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f5f2; --card:#ffffff; --ink:#15201a; --muted:#66736b; --line:#e2e7e3;
+  --brand:#0f6b43; --brand-2:#e5f3ec; --red:#c2352b; --red-2:#fbeceb; --amber:#b7791f; --amber-2:#fdf3e1;
+  --blue:#2457a6; --blue-2:#e8eefa; --radius:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0e1411; --card:#161e1a; --ink:#e7eee9; --muted:#93a198; --line:#26312b;
+    --brand:#3ec58a; --brand-2:#163327; --red:#ff7a6e; --red-2:#3a1c1a; --amber:#f0b350; --amber-2:#3a2e17;
+    --blue:#7ea7f0; --blue-2:#1a2640; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px;-webkit-text-size-adjust:100%}
+body{padding:env(safe-area-inset-top) 0 calc(78px + env(safe-area-inset-bottom))}
+.wrap{max-width:560px;margin:0 auto;padding:14px 14px 24px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 2px 12px}
+.brand{font-weight:800;font-size:19px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.brand .dot{width:26px;height:26px;border-radius:8px;background:var(--brand);display:grid;place-items:center;color:#fff;font-size:14px}
+.sync{font-size:11.5px;color:var(--muted);text-align:right}
+.month{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 12px}
+.month b{min-width:150px;text-align:center;font-size:15px;text-transform:capitalize}
+.iconbtn{border:1px solid var(--line);background:var(--card);color:var(--ink);width:36px;height:36px;border-radius:10px;font-size:18px;cursor:pointer}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:20px 4px 8px;font-weight:700}
+h2 .tag{background:var(--brand);color:#fff;border-radius:6px;padding:1px 6px;margin-right:6px;font-size:11px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.hero{background:linear-gradient(135deg,#0f6b43,#0b4a30);color:#fff;border:none}
+.hero .lbl{opacity:.8;font-size:12.5px}
+.hero .big{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:2px 0 10px}
+.hero .row3{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hero .pill{background:rgba(255,255,255,.12);border-radius:12px;padding:8px 10px}
+.hero .pill small{display:block;opacity:.8;font-size:11.5px}
+.hero .pill b{font-size:15px}
+.kv{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line);gap:10px}
+.kv:last-child{border-bottom:none}
+.kv span{color:var(--muted)}
+.kv b{font-variant-numeric:tabular-nums}
+.pos{color:var(--brand)} .neg{color:var(--red)} .warn{color:var(--amber)}
+.total{display:flex;justify-content:space-between;font-weight:800;font-size:16px;padding-top:10px;margin-top:4px;border-top:2px solid var(--line)}
+.btn{appearance:none;border:none;background:var(--brand);color:#fff;font:inherit;font-weight:700;border-radius:12px;padding:11px 14px;cursor:pointer;font-size:14.5px}
+.btn.sec{background:var(--brand-2);color:var(--brand)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.red{background:var(--red-2);color:var(--red)}
+.btn.sm{padding:7px 10px;font-size:13px;border-radius:10px}
+.btn.full{width:100%}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btns .btn{flex:1 1 auto}
+.item{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:none}
+.item .nm{font-weight:600}
+.item .sub{color:var(--muted);font-size:12.5px;grid-column:1/-1}
+.item .acts{display:flex;gap:6px;justify-content:flex-end}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%;min-width:0}
+textarea{min-height:76px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:-1px}
+label.f{display:block;font-size:12.5px;color:var(--muted);margin:8px 0 4px;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px}
+.inl{width:110px;text-align:right;padding:6px 8px}
+.badge{font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 8px;white-space:nowrap}
+.b-ok{background:var(--brand-2);color:var(--brand)} .b-pend{background:var(--amber-2);color:var(--amber)} .b-red{background:var(--red-2);color:var(--red)} .b-blue{background:var(--blue-2);color:var(--blue)}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;grid-column:1/-1}
+.bar i{display:block;height:100%;background:var(--brand);border-radius:99px}
+.bar i.over{background:var(--red)}
+.note{font-size:12.5px;color:var(--muted);line-height:1.45}
+.callout{border-radius:14px;padding:12px 14px;margin-bottom:10px;line-height:1.45;font-size:14px}
+.callout.green{background:var(--brand-2);color:var(--ink)} .callout.amber{background:var(--amber-2)} .callout.red{background:var(--red-2)} .callout.blue{background:var(--blue-2)}
+.callout b{font-weight:700}
+.recomp{border:2px solid var(--amber);background:var(--amber-2)}
+.recomp .big{font-size:24px;font-weight:800;color:var(--amber)}
+.ok-box{border:2px solid var(--brand);background:var(--brand-2)}
+.ok-box .big{font-size:24px;font-weight:800;color:var(--brand)}
+table.razao{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+table.razao th{text-align:left;color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;padding:6px 4px;border-bottom:2px solid var(--line)}
+table.razao td{padding:8px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+table.razao td.n{text-align:right;white-space:nowrap}
+table.razao th.n{text-align:right}
+table.razao .h{font-weight:600}
+table.razao .h small{display:block;color:var(--muted);font-weight:400}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:20}
+nav.tabs button{flex:1;background:none;border:none;color:var(--muted);font:inherit;font-size:10.5px;font-weight:600;padding:4px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button .ic{font-size:19px;line-height:1}
+nav.tabs button.on{color:var(--brand)}
+nav.tabs .num{font-size:9px;opacity:.7}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:50;padding:0}
+.modal{background:var(--card);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+.modal h3{margin:0 0 6px;font-size:18px}
+.modal .q{font-size:15.5px;margin:4px 0 10px;line-height:1.4}
+.modal .amount{font-size:28px;font-weight:800;margin:6px 0}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:12px;font-size:13.5px;z-index:60;max-width:90%;text-align:center}
+.plan{border-left:4px solid var(--brand);padding-left:12px;margin:12px 0}
+.plan.alt{border-color:var(--blue)} .plan.warnb{border-color:var(--amber)}
+.plan h4{margin:0 0 4px;font-size:15px}
+.plan p{margin:2px 0;font-size:14px;line-height:1.45}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:none;background:none;font:inherit;font-size:13px;font-weight:600;padding:8px;border-radius:9px;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.steps{margin:6px 0 0;padding-left:20px;line-height:1.55;font-size:13.5px}
+.steps li{margin-bottom:4px}
+code{background:var(--bg);border:1px solid var(--line);padding:1px 5px;border-radius:6px;font-size:12.5px;word-break:break-all}
+.empty{color:var(--muted);text-align:center;padding:14px 6px;font-size:14px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 10px;font-size:12.5px;cursor:pointer;color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<nav class="tabs" id="tabs"></nav>
+<div id="modal-root"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= utilidades ================= */
+const $ = s => document.querySelector(s);
+const BRL = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+const brl = v => BRL.format(Math.round((+v||0)*100)/100);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+function num(s){
+  if(typeof s==='number') return s;
+  s=String(s||'').trim().replace(/[R$\s]/gi,'');
+  if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.');
+  else if(/^\d{1,3}(\.\d{3})+$/.test(s)) s=s.replace(/\./g,'');
+  const n=parseFloat(s); return isFinite(n)?n:0;
+}
+const fmtN = v => (Math.round(v*100)/100).toLocaleString('pt-BR');
+const pad = n => String(n).padStart(2,'0');
+const isoDate = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const monthKey = d => d.getFullYear()+'-'+pad(d.getMonth()+1);
+const today = () => isoDate(new Date());
+const brDate = iso => { if(!iso) return ''; const [y,m,d]=iso.split('-'); return d+'/'+m+'/'+y; };
+const APP_URL=/claude|anthropic|localhost|^$/.test(location.hostname)?'https://claude.ai/artifact/Cw1jBuPBwPjJvAa5CtmUWb':(location.origin+location.pathname);
+const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const monthLabel = k => { const [y,m]=k.split('-'); return MESES[+m-1]+' '+y; };
+function shiftMonth(k,delta){ const [y,m]=k.split('-').map(Number); const d=new Date(y,m-1+delta,1); return monthKey(d); }
+function hm2min(s){ const m=/^(\d{1,2}):(\d{2})$/.exec(s||''); return m?(+m[1])*60+(+m[2]):0; }
+function min2hm(t){ t=Math.round(t); const h=Math.floor(t/60)%24, m=t%60; return pad(h)+':'+pad(m); }
+
+/* ================= estado ================= */
+function defaultState(){
+  const f=(nome,venc)=>({id:uid(),nome,valor:0,venc});
+  return {
+    v:1,
+    config:{salario:10000, valorCorrida:30, custoPct:20, corridasTrajeto:2, horaSaida:'18:00', horaLimite:'20:30', corridasPorHora:1.5, diasSemana:5},
+    fixas:[f('Aluguel',5),f('Carro',10),f('Faculdade',10),f('Água',15),f('Luz',15),f('Telefone',20)],
+    variaveis:[{id:uid(),nome:'Alimentação',limite:0},{id:uid(),nome:'Lazer',limite:0}],
+    objetivos:[],
+    dividas:[],
+    dividaCfg:{metodo:'avalanche', extraSalario:0, corridasDia:0, metaMeses:12}
+  };
+}
+let S = defaultState();      // configuração e cadastros
+let L = {};                  // lançamentos por mês: { 'AAAA-MM': [ ... ] }
+let ui = {tab:'inicio', mes:monthKey(new Date()), planText:'', planValor:'', planPrazo:'', planRes:null};
+
+/* ===== persistência: nuvem (db do artefato) + cópia local ===== */
+let cloud=null, cloudBase=null, syncState='local';
+const dirty=new Set(); let saveTimer=null; const chains={};
+function lsGet(k){ try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;} }
+function lsSet(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} }
+
+function loadLocal(){
+  const s=lsGet('mc_estado'); const l=lsGet('mc_lanc');
+  if(s && s.config) S=Object.assign(defaultState(),s);
+  if(l && typeof l==='object') L=l;
+}
+function markDirty(docName){ dirty.add(docName); lsSet('mc_estado',S); lsSet('mc_lanc',L);
+  clearTimeout(saveTimer); saveTimer=setTimeout(flush,700); }
+function flush(){
+  if(!cloud){ return; }
+  const names=[...dirty]; dirty.clear();
+  names.forEach(n=>{
+    const body = n==='estado' ? {json:JSON.stringify(S)} : {json:JSON.stringify(L[n.slice(5)]||[])};
+    chains[n]=(chains[n]||Promise.resolve()).then(()=>cloud.doc(cloudBase+'/'+n).set(body)).then(()=>{
+      setSync('nuvem');
+    }).catch(e=>{ setSync('erro'); if(e && e.code==='quota_exceeded') toast('Espaço de armazenamento cheio — exporte um backup.'); });
+  });
+}
+function saveEstado(){ markDirty('estado'); }
+function saveMes(mk){ markDirty('lanc-'+mk); }
+function setSync(s){ syncState=s; const el=$('#sync'); if(el) el.textContent=syncLabel(); }
+function syncLabel(){
+  return {local:'💾 salvo neste aparelho',carregando:'⏳ conectando…',nuvem:'☁️ sincronizado',erro:'⚠️ sem conexão — salvo no aparelho'}[syncState]||'';
+}
+async function initCloud(){
+  if(!(window.claude && typeof window.claude.use==='function')) return;
+  setSync('carregando');
+  let timer=setTimeout(()=>{ if(syncState==='carregando') setSync('erro'); },10000);
+  try{
+    const [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
+    if(!db||!user){ clearTimeout(timer); setSync('local'); return; }
+    const id=await user.id();
+    if(!id){ clearTimeout(timer); setSync('local'); return; }
+    cloudBase='data/users/'+id;
+    const snap=await db.collection(cloudBase).get();
+    clearTimeout(timer);
+    let gotEstado=false; const remoteL={};
+    snap.docs.forEach(d=>{
+      const data=d.data()||{}; let val=null;
+      try{ val=JSON.parse(data.json||'null'); }catch(e){}
+      if(d.id==='estado' && val && val.config){ S=Object.assign(defaultState(),val); gotEstado=true; }
+      else if(d.id.startsWith('lanc-') && Array.isArray(val)){ remoteL[d.id.slice(5)]=val; }
+    });
+    cloud=db;
+    if(gotEstado){ L=remoteL; lsSet('mc_estado',S); lsSet('mc_lanc',L); }
+    else { // primeira vez na nuvem: envia o que existe localmente
+      dirty.add('estado'); Object.keys(L).forEach(k=>dirty.add('lanc-'+k)); flush();
+    }
+    setSync('nuvem'); render();
+  }catch(e){ clearTimeout(timer); setSync('erro'); }
+}
+
+/* ================= cálculos ================= */
+const C = () => S.config;
+const liqCorrida = () => C().valorCorrida*(1-C().custoPct/100);
+const mesL = mk => L[mk]||(L[mk]=[]);
+function allL(){ return Object.values(L).flat(); }
+function sum(arr,f){ return arr.reduce((a,x)=>a+(f?f(x):x),0); }
+function corridasExtrasPossiveisDia(){
+  const h=Math.max(0,(hm2min(C().horaLimite)-hm2min(C().horaSaida))/60);
+  return Math.floor(h*C().corridasPorHora);
+}
+function corridasMaxDia(){ return C().corridasTrajeto + corridasExtrasPossiveisDia(); }
+function diasUteisMes(){ return C().diasSemana===6 ? 26 : 22; }
+function isWorkday(d){ const w=d.getDay(); return C().diasSemana===6 ? w!==0 : (w!==0&&w!==6); }
+function workdaysUntil(iso){
+  if(!iso) return 0; const end=new Date(iso+'T12:00:00'); const d=new Date(); d.setHours(12,0,0,0);
+  let n=0; while(d<=end){ if(isWorkday(d)) n++; d.setDate(d.getDate()+1); } return n;
+}
+function addWorkdays(n){ const d=new Date(); d.setHours(12,0,0,0); let c=0; if(n<=0) return isoDate(d);
+  while(c<n){ d.setDate(d.getDate()+1); if(isWorkday(d)) c++; } return isoDate(d); }
+function horaFim(extrasNoDia){ return min2hm(hm2min(C().horaSaida)+ (extrasNoDia/C().corridasPorHora)*60); }
+
+function resumoMes(mk){
+  const ls=mesL(mk);
+  const cred=sum(ls.filter(x=>x.t==='C'),x=>x.v), deb=sum(ls.filter(x=>x.t==='D'),x=>x.v);
+  const salarioRec=sum(ls.filter(x=>x.t==='C'&&x.p==='salario'),x=>x.v);
+  const uberL=ls.filter(x=>x.t==='C'&&x.p==='uber');
+  const uberBruto=sum(uberL,x=>x.v), uberLiq=uberBruto*(1-C().custoPct/100);
+  const outrasRendas=sum(ls.filter(x=>x.t==='C'&&x.p!=='salario'&&x.p!=='uber'),x=>x.v);
+  const fixasPrev=sum(S.fixas,x=>x.valor);
+  const fixasPagas=sum(ls.filter(x=>x.t==='D'&&x.p==='fixa'),x=>x.v);
+  const extras=sum(ls.filter(x=>x.t==='D'&&x.p==='variavel'),x=>x.v);
+  const limitesVar=sum(S.variaveis,x=>x.limite);
+  const aportes=sum(ls.filter(x=>x.t==='D'&&x.p==='objetivo'),x=>x.v);
+  const pagDividas=sum(ls.filter(x=>x.t==='D'&&x.p==='divida'),x=>x.v);
+  const outrosGastos=sum(ls.filter(x=>x.t==='D'&&x.p==='outro'),x=>x.v);
+  const minDividas=sum(S.dividas.filter(d=>d.saldo>0),d=>d.parcela);
+  const compromissoSalario=fixasPrev+minDividas+(+S.dividaCfg.extraSalario||0);
+  const salarioBase=salarioRec>0?salarioRec:C().salario;
+  const sobraSalario=salarioBase-compromissoSalario;
+  // recomposição: extras (parte 2) e objetivos (parte 3) devem ser cobertos pela renda extra
+  const rendaExtra=uberLiq+outrasRendas;
+  const rec2=Math.max(0,extras-rendaExtra);
+  const sobraParaP3=Math.max(0,rendaExtra-extras);
+  const rec3=Math.max(0,aportes-sobraParaP3);
+  const recTotal=rec2+rec3;
+  return {ls,cred,deb,saldo:cred-deb,salarioRec,salarioBase,uberBruto,uberLiq,nCorridas:uberL.length,outrasRendas,fixasPrev,fixasPagas,extras,limitesVar,aportes,pagDividas,outrosGastos,minDividas,compromissoSalario,sobraSalario,rendaExtra,rec2,rec3,recTotal};
+}
+function corridasPara(valor){ const l=liqCorrida(); return l>0?Math.ceil(valor/l):Infinity; }
+function guardadoObj(o){ return sum(allL().filter(x=>x.p==='objetivo'&&x.r===o.id),x=>x.t==='D'?x.v:-x.v); }
+
+/* ===== dívidas: simulação mês a mês (avalanche ou bola de neve) ===== */
+function simular(dividas,extraMensal,metodo){
+  let ds=dividas.filter(d=>d.saldo>0).map(d=>({...d,s:+d.saldo,j:(+d.juros||0)/100,pm:+d.parcela||0,quit:null}));
+  if(!ds.length) return {meses:0,juros:0,ordem:[],ok:true};
+  const orcamento=sum(ds,d=>d.pm)+extraMensal;
+  let mes=0,juros=0;
+  while(ds.some(d=>d.s>0.005) && mes<600){
+    mes++;
+    ds.forEach(d=>{ if(d.s>0){ const i=d.s*d.j; juros+=i; d.s+=i; } });
+    let disp=orcamento;
+    ds.forEach(d=>{ if(d.s>0){ const p=Math.min(d.s,d.pm,disp); d.s-=p; disp-=p; } });
+    const ativos=ds.filter(d=>d.s>0.005).sort(metodo==='avalanche'?(a,b)=>b.j-a.j||a.s-b.s:(a,b)=>a.s-b.s||b.j-a.j);
+    for(const d of ativos){ if(disp<=0) break; const p=Math.min(d.s,disp); d.s-=p; disp-=p; }
+    ds.forEach(d=>{ if(d.s<=0.005 && d.quit===null){ d.s=0; d.quit=mes; } });
+  }
+  const ok=!ds.some(d=>d.s>0.005);
+  const ordem=[...ds].sort((a,b)=>(a.quit??9999)-(b.quit??9999));
+  return {meses:mes,juros,ordem,ok,orcamento};
+}
+function extraParaMeses(dividas,meses,metodo){
+  let lo=0,hi=sum(dividas,d=>+d.saldo)+1;
+  if(!simular(dividas,hi,metodo).ok) return null;
+  for(let i=0;i<40;i++){ const mid=(lo+hi)/2; const r=simular(dividas,mid,metodo); if(r.ok&&r.meses<=meses) hi=mid; else lo=mid; }
+  return hi;
+}
+
+/* ================= notificações do PicPay ================= */
+function parseNotificacao(txt){
+  const t=String(txt||'');
+  const m=t.match(/R\$\s*([\d.]+(?:,\d{1,2})?)/i) || t.match(/(\d{1,3}(?:\.\d{3})*,\d{2})/);
+  const valor=m?num(m[1]):0;
+  const low=t.toLowerCase();
+  const renda=/(recebeu|recebido|recebida|caiu na sua conta|chegou|transfer[eê]ncia recebida|pix recebido|depositad|voc[eê] ganhou|cashback)/.test(low);
+  const despesa=/(compra|pagamento|pagou|pago|enviou|enviado|d[eé]bito|aprovad|transfer[eê]ncia enviada|pix enviado|saque|fatura|boleto)/.test(low);
+  let tipo=null;
+  if(renda && !/(enviou|enviado|pagou|compra)/.test(low)) tipo='renda';
+  else if(despesa) tipo='despesa';
+  else if(renda) tipo='renda';
+  const quem=(t.match(/(?:de|para)\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ][\wÁÉÍÓÚÂÊÔÃÕÇáéíóúâêôãõç.]+(?:\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇ][\wáéíóúâêôãõç.]+){0,3})/)||[])[1]||'';
+  const loja=(t.match(/(?:em|no|na)\s+([A-Z0-9][\w*\-. ]{2,30})/)||[])[1]||'';
+  return {valor,tipo,quem,loja:loja.trim(),texto:t.trim()};
+}
+function handleHash(){
+  const h=(location.hash||'').slice(1);
+  const m=/^(pix|renda|recebido|compra|gasto|despesa)-(\d+)$/i.exec(h);
+  if(!m) return;
+  const valor=(+m[2])/100; const tipo=/^(pix|renda|recebido)$/i.test(m[1])?'renda':'despesa';
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){ try{location.hash='';}catch(_){} }
+  perguntarNotificacao({valor,tipo,texto:'Notificação do PicPay ('+(tipo==='renda'?'Pix recebido':'compra')+')'});
+}
+function opcoesParte(sel){
+  const o=(v,t)=>`<option value="${v}" ${sel===v?'selected':''}>${esc(t)}</option>`;
+  let h='<optgroup label="1 · Despesas fixas">'+S.fixas.map(f=>o('fixa:'+f.id,f.nome)).join('')+'</optgroup>';
+  h+='<optgroup label="2 · Extras">'+S.variaveis.map(v=>o('variavel:'+v.id,v.nome)).join('')+'</optgroup>';
+  if(S.objetivos.length) h+='<optgroup label="3 · Objetivos (guardar dinheiro)">'+S.objetivos.map(v=>o('objetivo:'+v.id,v.nome)).join('')+'</optgroup>';
+  if(S.dividas.length) h+='<optgroup label="4 · Dívidas">'+S.dividas.map(v=>o('divida:'+v.id,v.nome)).join('')+'</optgroup>';
+  h+='<optgroup label="Outros">'+o('outro:','Outra despesa')+'</optgroup>';
+  return h;
+}
+function opcoesRenda(sel){
+  const o=(v,t)=>`<option value="${v}" ${sel===v?'selected':''}>${t}</option>`;
+  return o('uber','Corrida Uber (renda extra)')+o('pix','Pix recebido (renda extra)')+o('salario','Salário')+o('renda','Outra renda');
+}
+function perguntarNotificacao(n){
+  if(!n.valor){ toast('Não encontrei um valor (R$) nesse texto.'); return; }
+  if(n.tipo==='renda'){
+    modal(`<h3>💰 Pix recebido</h3>
+      <div class="amount pos">${brl(n.valor)}</div>
+      <p class="q"><b>Deseja inserir o valor como renda?</b></p>
+      ${n.texto?`<p class="note">“${esc(n.texto.slice(0,160))}”</p>`:''}
+      <label class="f">Tipo de renda</label><select id="m-rt">${opcoesRenda('pix')}</select>
+      <label class="f">Descrição</label><input id="m-desc" value="${esc(n.quem?('Pix de '+n.quem):'Pix recebido')}">
+      <div class="btns" style="margin-top:14px"><button class="btn ghost" data-a="close">Não</button><button class="btn" data-a="m-renda" data-v="${n.valor}">Sim, inserir como renda</button></div>`);
+  } else {
+    modal(`<h3>🧾 Compra detectada</h3>
+      <div class="amount neg">${brl(n.valor)}</div>
+      <p class="q"><b>Deseja inserir o valor como despesa? Em qual parte do app?</b></p>
+      ${n.texto?`<p class="note">“${esc(n.texto.slice(0,160))}”</p>`:''}
+      <label class="f">Parte do app</label><select id="m-parte">${opcoesParte('variavel:'+(S.variaveis[0]||{}).id)}</select>
+      <label class="f">Descrição</label><input id="m-desc" value="${esc(n.loja||'Compra no PicPay')}">
+      <div class="btns" style="margin-top:14px"><button class="btn ghost" data-a="close">Ignorar</button><button class="btn" data-a="m-desp" data-v="${n.valor}">Inserir despesa</button></div>`);
+  }
+}
+
+/* ================= lançamentos ================= */
+function lancar({t,v,desc,p,r,data}){
+  data=data||today(); const mk=data.slice(0,7);
+  mesL(mk).push({id:uid(),d:data,t,v:Math.round(v*100)/100,desc:desc||'',p,r:r||''});
+  mesL(mk).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+  saveMes(mk);
+}
+function apagarLanc(id){
+  for(const mk of Object.keys(L)){ const i=L[mk].findIndex(x=>x.id===id); if(i>=0){
+    const x=L[mk][i];
+    if(x.p==='divida'){ const d=S.dividas.find(d=>d.id===x.r); if(d){ d.saldo=Math.round((+d.saldo+x.v)*100)/100; saveEstado(); } }
+    L[mk].splice(i,1); saveMes(mk); return; } }
+}
+function nomeRef(x){
+  const f=(arr)=>((arr.find(a=>a.id===x.r)||{}).nome)||'';
+  return {salario:'Salário',uber:'Uber',pix:'Pix recebido',renda:'Renda',fixa:'Fixa · '+f(S.fixas),variavel:'Extra · '+f(S.variaveis),objetivo:'Objetivo · '+f(S.objetivos),divida:'Dívida · '+f(S.dividas),outro:'Outra despesa'}[x.p]||x.p;
+}
+
+/* ================= UI genérica ================= */
+function modal(html){ $('#modal-root').innerHTML=`<div class="modal-bg" data-a="bg"><div class="modal">${html}</div></div>`; }
+function closeModal(){ $('#modal-root').innerHTML=''; }
+let toastT; function toast(msg){ let el=$('.toast'); if(!el){ el=document.createElement('div'); el.className='toast'; document.body.appendChild(el);} el.textContent=msg; clearTimeout(toastT); toastT=setTimeout(()=>el.remove(),2600); }
+
+const TABS=[['inicio','🏠','Início',''],['fixas','📌','Fixas','1'],['extras','🍔','Extras','2'],['metas','🎯','Metas','3'],['dividas','💳','Dívidas','4'],['planejar','🚗','Planejar','5']];
+function renderTabs(){
+  $('#tabs').innerHTML=TABS.map(([k,ic,nm,n])=>`<button class="${ui.tab===k?'on':''}" data-a="tab" data-k="${k}"><span class="ic">${ic}</span>${nm}${n?`<span class="num">parte ${n}</span>`:''}</button>`).join('');
+}
+function topo(titulo){
+  return `<header class="top"><div class="brand"><span class="dot">R$</span>${titulo}</div><div class="sync" id="sync">${syncLabel()}</div></header>`;
+}
+function seletorMes(){
+  return `<div class="month"><button class="iconbtn" data-a="mes" data-d="-1">‹</button><b>${monthLabel(ui.mes)}</b><button class="iconbtn" data-a="mes" data-d="1">›</button></div>`;
+}
+function caixaRecompor(valor,titulo,explic){
+  if(valor<=0.005) return `<div class="card ok-box"><div class="note"><b>${titulo}</b></div><div class="big">R$ 0,00 a recompor</div><div class="note">${explic} Tudo coberto pela renda extra — salário preservado. 👏</div></div>`;
+  const n=corridasPara(valor), max=corridasMaxDia(), dias=Math.ceil(n/max), ext=Math.max(0,Math.ceil(n/Math.max(1,diasRestantesMes()))-C().corridasTrajeto);
+  return `<div class="card recomp"><div class="note"><b>${titulo}</b></div><div class="big">${brl(valor)}</div>
+  <div class="note">${explic}<br>Isso equivale a <b>${n} corrida${n===1?'':'s'}</b> (líquido de ${brl(liqCorrida())} cada). No ritmo máximo (${fmtN(max)}/dia, até ${C().horaLimite}) são <b>${dias} dia(s) útil(eis)</b>${diasRestantesMes()>0&&ui.mes===monthKey(new Date())?` — ou, até o fim do mês, ida e volta + <b>${ext} extra(s)/dia</b> (encerrando ~${horaFim(ext)})`:''}.</div></div>`;
+}
+function diasRestantesMes(){ const d=new Date(); const fim=new Date(d.getFullYear(),d.getMonth()+1,0); return workdaysUntil(isoDate(fim)); }
+
+/* ================= telas ================= */
+function vInicio(){
+  const r=resumoMes(ui.mes); const cfg=C();
+  const temSalario=r.salarioRec>0;
+  const preservado=r.sobraSalario-r.recTotal-r.outrosGastos;
+  return topo('Meu Caixa')+seletorMes()+`
+  <div class="card hero">
+    <div class="lbl">Saldo do mês (créditos − débitos)</div>
+    <div class="big">${brl(r.saldo)}</div>
+    <div class="row3">
+      <div class="pill"><small>Créditos (entradas)</small><b>${brl(r.cred)}</b></div>
+      <div class="pill"><small>Débitos (saídas)</small><b>${brl(r.deb)}</b></div>
+    </div>
+  </div>
+  ${!temSalario?`<div class="callout blue">O salário de ${monthLabel(ui.mes)} ainda não foi lançado. <div class="btns" style="margin-top:8px"><button class="btn sm" data-a="lanc-salario">Lançar salário</button></div></div>`:''}
+
+  <h2>Uber — renda extra do mês</h2>
+  <div class="card">
+    <div class="kv"><span>Corridas registradas</span><b>${r.nCorridas}</b></div>
+    <div class="kv"><span>Bruto</span><b>${brl(r.uberBruto)}</b></div>
+    <div class="kv"><span>Líquido (−${cfg.custoPct}% combustível/desgaste)</span><b class="pos">${brl(r.uberLiq)}</b></div>
+    <div class="btns" style="margin-top:10px">
+      <button class="btn sec sm" data-a="uber" data-desc="Ida DNIT">🚗 Ida DNIT +${brl(cfg.valorCorrida)}</button>
+      <button class="btn sec sm" data-a="uber" data-desc="Volta DNIT">🏠 Volta +${brl(cfg.valorCorrida)}</button>
+      <button class="btn sec sm" data-a="uber-outro">+ Corrida extra</button>
+    </div>
+  </div>
+
+  <h2>Salário — para onde vai</h2>
+  <div class="card">
+    <div class="kv"><span>Salário previsto (toque para editar)</span><input class="inl" inputmode="decimal" data-ed="config" data-f="salario" value="${fmtN(cfg.salario)}"></div>
+    ${temSalario?`<div class="kv"><span>Recebido em ${monthLabel(ui.mes)} (usado no cálculo)</span><b class="pos">${brl(r.salarioRec)}</b></div>`:''}
+    <div class="kv"><span>(−) Parte 1 · Fixas previstas</span><b class="neg">${brl(r.fixasPrev)}</b></div>
+    <div class="kv"><span>(−) Parte 4 · Parcelas mínimas de dívidas</span><b class="neg">${brl(r.minDividas)}</b></div>
+    ${+S.dividaCfg.extraSalario?`<div class="kv"><span>(−) Parte 4 · Extra para quitar dívidas</span><b class="neg">${brl(S.dividaCfg.extraSalario)}</b></div>`:''}
+    <div class="total"><span>Sobra do salário</span><span class="${r.sobraSalario>=0?'pos':'neg'}">${brl(r.sobraSalario)}</span></div>
+    <p class="note" style="margin:8px 0 0">Regra do app: <b>extras (parte 2) e objetivos (parte 3) são pagos com a renda do Uber</b>. O que passar disso “morde” a sobra do salário e precisa ser recomposto.</p>
+  </div>
+  ${caixaRecompor(r.recTotal,'Total a recompor no mês (partes 2 + 3)',`Extras ${brl(r.extras)} + aportes em objetivos ${brl(r.aportes)} − renda extra ${brl(r.rendaExtra)}.`)}
+  <div class="card"><div class="kv"><span>Sobra do salário que fica preservada</span><b class="${preservado>=0?'pos':'neg'}">${brl(preservado)}</b></div><p class="note" style="margin:4px 0 0">Quanto mais isso cresce, mais rápido você bate as metas.</p></div>
+
+  <h2>Notificação do PicPay</h2>
+  <div class="card">
+    <p class="note" style="margin-top:0">Cole aqui o texto da notificação (ou abra o app pelo atalho automático — veja “Configurar”).</p>
+    <textarea id="notif" placeholder="Ex.: Você recebeu um Pix de R$ 30,00 de Fulano  /  Compra aprovada de R$ 45,90 em PADARIA"></textarea>
+    <div class="btns" style="margin-top:8px"><button class="btn" data-a="analisar">Analisar notificação</button></div>
+  </div>
+
+  <div class="btns" style="margin-top:14px">
+    <button class="btn ghost" data-a="novo-lanc">＋ Lançamento</button>
+    <button class="btn ghost" data-a="tab" data-k="razao">📒 Razão D/C</button>
+    <button class="btn ghost" data-a="tab" data-k="config">⚙️ Configurar</button>
+  </div>`;
+}
+
+function vFixas(){
+  const r=resumoMes(ui.mes); const ls=r.ls;
+  const pagoDe=f=>sum(ls.filter(x=>x.p==='fixa'&&x.r===f.id&&x.t==='D'),x=>x.v);
+  const items=S.fixas.map(f=>{ const pg=pagoDe(f); const ok=pg>0;
+    return `<div class="item">
+      <div><div class="nm">${esc(f.nome)}</div></div>
+      <div class="acts"><input class="inl" inputmode="decimal" data-ed="fixas" data-id="${f.id}" data-f="valor" value="${f.valor?fmtN(f.valor):''}" placeholder="0,00"></div>
+      <div class="sub" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span>Vence dia <input class="inl" style="width:52px;text-align:center;padding:4px" inputmode="numeric" data-ed="fixas" data-id="${f.id}" data-f="venc" data-k="int" value="${f.venc||''}"> · ${ok?`<span class="badge b-ok">Pago ${brl(pg)}</span>`:`<span class="badge b-pend">Pendente</span>`}</span>
+        <span class="acts">${ok?`<button class="btn ghost sm" data-a="desfazer-fixa" data-id="${f.id}">Desfazer</button>`:`<button class="btn sm" data-a="pagar-fixa" data-id="${f.id}">Pagar</button>`}<button class="btn ghost sm" data-a="del" data-col="fixas" data-id="${f.id}">✕</button></span>
+      </div></div>`; }).join('');
+  return topo('Parte 1 · Fixas')+seletorMes()+`
+  <div class="card">${items||'<div class="empty">Nenhuma despesa fixa.</div>'}
+    <div class="total"><span>Total fixo previsto</span><span class="neg">${brl(r.fixasPrev)}</span></div>
+    <div class="kv"><span>Pago em ${monthLabel(ui.mes)}</span><b>${brl(r.fixasPagas)}</b></div>
+    <div class="kv"><span>Falta pagar</span><b class="warn">${brl(Math.max(0,r.fixasPrev-r.fixasPagas))}</b></div>
+    <div class="kv"><span>Comprometimento do salário</span><b>${C().salario?fmtN(r.fixasPrev/C().salario*100):0}%</b></div>
+  </div>
+  <div class="card"><label class="f" style="margin-top:0">Nova despesa fixa</label>
+    <div class="grid3"><input id="nf-nome" placeholder="Ex.: Internet"><input id="nf-valor" inputmode="decimal" placeholder="Valor"><input id="nf-venc" inputmode="numeric" placeholder="Dia"></div>
+    <div class="btns" style="margin-top:8px"><button class="btn sec" data-a="add-fixa">Adicionar</button></div></div>
+  <p class="note">Toque no valor para editar. “Pagar” lança um débito no mês com o valor previsto.</p>`;
+}
+
+function vExtras(){
+  const r=resumoMes(ui.mes); const ls=r.ls;
+  const cats=S.variaveis.map(v=>{ const g=sum(ls.filter(x=>x.p==='variavel'&&x.r===v.id&&x.t==='D'),x=>x.v);
+    const pct=v.limite>0?Math.min(100,g/v.limite*100):0; const over=v.limite>0&&g>v.limite;
+    return `<div class="item"><div><div class="nm">${esc(v.nome)}</div></div>
+      <div class="acts"><button class="btn sm" data-a="gasto" data-id="${v.id}">+ Gasto</button><button class="btn ghost sm" data-a="del" data-col="variaveis" data-id="${v.id}">✕</button></div>
+      <div class="sub" style="display:flex;justify-content:space-between;align-items:center"><span>Gasto <b class="${over?'neg':''}">${brl(g)}</b> de limite</span><input class="inl" inputmode="decimal" data-ed="variaveis" data-id="${v.id}" data-f="limite" value="${v.limite?fmtN(v.limite):''}" placeholder="limite"></div>
+      ${v.limite>0?`<div class="bar"><i class="${over?'over':''}" style="width:${pct}%"></i></div>`:''}</div>`; }).join('');
+  const lst=ls.filter(x=>x.p==='variavel').slice().reverse().map(x=>`<div class="item"><div><div class="nm">${esc(x.desc||'Gasto')}</div></div><div class="acts"><b class="neg">${brl(x.v)}</b><button class="btn ghost sm" data-a="del-lanc" data-id="${x.id}">✕</button></div><div class="sub">${brDate(x.d)} · ${esc(nomeRef(x))}</div></div>`).join('');
+  return topo('Parte 2 · Extras')+seletorMes()+`
+  <div class="card">${cats}
+    <div class="total"><span>Total de extras no mês</span><span class="neg">${brl(r.extras)}</span></div>
+    ${r.limitesVar?`<div class="kv"><span>Soma dos limites</span><b>${brl(r.limitesVar)}</b></div>`:''}
+  </div>
+  <div class="card"><label class="f" style="margin-top:0">Nova categoria de extras</label>
+    <div class="grid2"><input id="nv-nome" placeholder="Ex.: Delivery, Bar"><input id="nv-lim" inputmode="decimal" placeholder="Limite mensal"></div>
+    <div class="btns" style="margin-top:8px"><button class="btn sec" data-a="add-var">Adicionar</button></div></div>
+  <h2>Lançamentos de ${monthLabel(ui.mes)}</h2>
+  <div class="card">${lst||'<div class="empty">Nenhum gasto extra ainda.</div>'}</div>
+  <h2>Fechamento da parte 2</h2>
+  <div class="card"><div class="kv"><span>Extras gastos</span><b class="neg">${brl(r.extras)}</b></div><div class="kv"><span>Renda extra do mês (Uber líquido + Pix)</span><b class="pos">${brl(r.rendaExtra)}</b></div></div>
+  ${caixaRecompor(r.rec2,'Quanto recompor para não gastar o salário',`Extras que passaram da renda extra.`)}`;
+}
+
+function vMetas(){
+  const r=resumoMes(ui.mes);
+  const items=S.objetivos.map(o=>{ const g=guardadoObj(o); const falta=Math.max(0,o.valor-g); const pct=o.valor>0?Math.min(100,g/o.valor*100):0;
+    let plano='';
+    if(o.concluido) plano='<span class="badge b-ok">Conquistado ✔</span>';
+    else if(falta<=0) plano='<span class="badge b-ok">Valor completo — pode comprar!</span>';
+    else { const n=corridasPara(falta);
+      if(o.prazo){ const du=workdaysUntil(o.prazo); if(du>0){ const porDia=n/du; const ext=Math.max(0,Math.ceil(porDia-C().corridasTrajeto));
+          plano=`Faltam ${brl(falta)} = <b>${n} corridas</b> em ${du} dias úteis → <b>${fmtN(Math.ceil(porDia*10)/10)}/dia</b>${ext>0?` (ida/volta + ${ext} extra(s), até ~${horaFim(ext)})`:' (só ida e volta já resolve)'}${porDia>corridasMaxDia()?' <span class="badge b-red">acima do seu limite diário</span>':''}`; }
+        else plano=`<span class="badge b-red">Prazo vencido</span> faltam ${brl(falta)}`; }
+      else { const dias=Math.ceil(n/corridasMaxDia()); plano=`Faltam ${brl(falta)} = <b>${n} corridas</b> ≈ ${dias} dias úteis no ritmo máximo (previsão ${brDate(addWorkdays(dias))})`; } }
+    return `<div class="item"><div><div class="nm">${esc(o.nome)}</div></div>
+      <div class="acts"><b>${brl(g)}</b><span class="note">/ ${brl(o.valor)}</span></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="sub">${o.prazo?'Prazo '+brDate(o.prazo)+' · ':''}${plano}</div>
+      <div class="sub acts" style="justify-content:flex-start">${o.concluido?'':`<button class="btn sm" data-a="aporte" data-id="${o.id}">Guardar</button><button class="btn sec sm" data-a="concluir" data-id="${o.id}">Comprei</button>`}<button class="btn ghost sm" data-a="del" data-col="objetivos" data-id="${o.id}">Excluir</button></div></div>`; }).join('');
+  return topo('Parte 3 · Objetivos')+seletorMes()+`
+  <div class="card">${items||'<div class="empty">Nenhum objetivo ainda. Crie um abaixo ou use a parte 5 (Planejar).</div>'}
+    ${S.objetivos.length?`<div class="total"><span>Guardado em objetivos</span><span class="pos">${brl(sum(S.objetivos,guardadoObj))}</span></div>`:''}</div>
+  <div class="card"><label class="f" style="margin-top:0">Novo objetivo</label>
+    <input id="no-nome" placeholder="Ex.: Passagem para Fortaleza">
+    <div class="grid2" style="margin-top:6px"><input id="no-valor" inputmode="decimal" placeholder="Valor (R$)"><input id="no-prazo" type="date"></div>
+    <div class="btns" style="margin-top:8px"><button class="btn sec" data-a="add-obj">Criar objetivo</button></div></div>
+  <h2>Fechamento da parte 3</h2>
+  <div class="card"><div class="kv"><span>Guardado em objetivos neste mês</span><b>${brl(r.aportes)}</b></div><div class="kv"><span>Renda extra que sobrou após os extras</span><b class="pos">${brl(Math.max(0,r.rendaExtra-r.extras))}</b></div></div>
+  ${caixaRecompor(r.rec3,'Quanto recompor para não gastar o salário',`Aportes em objetivos que não foram cobertos pela renda extra.`)}`;
+}
+
+function vDividas(){
+  const cfg=S.dividaCfg; const r=resumoMes(ui.mes);
+  const extraUber=(+cfg.corridasDia||0)*liqCorrida()*diasUteisMes();
+  const extra=(+cfg.extraSalario||0)+extraUber;
+  const ativos=S.dividas.filter(d=>d.saldo>0);
+  const sim=simular(S.dividas,extra,cfg.metodo);
+  const outro=simular(S.dividas,extra,cfg.metodo==='avalanche'?'bola':'avalanche');
+  const items=S.dividas.map(d=>`<div class="item"><div><div class="nm">${esc(d.nome)}</div></div>
+     <div class="acts">${d.saldo>0?`<button class="btn sm" data-a="pagar-div" data-id="${d.id}">Pagar</button>`:'<span class="badge b-ok">Quitada</span>'}<button class="btn ghost sm" data-a="del" data-col="dividas" data-id="${d.id}">✕</button></div>
+     <div class="sub grid3" style="grid-template-columns:1fr 1fr 1fr">
+       <span>Saldo<br><input inputmode="decimal" data-ed="dividas" data-id="${d.id}" data-f="saldo" value="${fmtN(d.saldo)}"></span>
+       <span>Juros % a.m.<br><input inputmode="decimal" data-ed="dividas" data-id="${d.id}" data-f="juros" value="${fmtN(d.juros)}"></span>
+       <span>Parcela mín.<br><input inputmode="decimal" data-ed="dividas" data-id="${d.id}" data-f="parcela" value="${fmtN(d.parcela)}"></span>
+     </div></div>`).join('');
+  let res='';
+  if(ativos.length){
+    if(!sim.ok) res=`<div class="callout red"><b>Com esse orçamento a dívida não fecha</b> — os juros crescem mais rápido que os pagamentos. Aumente o extra do salário ou as corridas por dia.</div>`;
+    else {
+      const alvo=sim.ordem[0];
+      res=`<div class="callout green">Pague o mínimo de todas e jogue todo o extra (${brl(extra)}/mês) em <b>${esc(alvo.nome)}</b>. Quando quitar, a parcela dela passa a reforçar a próxima (efeito bola de neve).</div>
+      <div class="card"><div class="kv"><span>Orçamento mensal para dívidas</span><b>${brl(sim.orcamento)}</b></div>
+        <div class="kv"><span>↳ do salário (mínimos + extra)</span><b>${brl(r.minDividas+(+cfg.extraSalario||0))}</b></div>
+        <div class="kv"><span>↳ do Uber (${fmtN(+cfg.corridasDia||0)} corrida(s)/dia × ${diasUteisMes()} dias)</span><b>${brl(extraUber)}</b></div>
+        <div class="kv"><span>Livre de dívidas em</span><b class="pos">${sim.meses} meses (${monthLabel(shiftMonth(monthKey(new Date()),sim.meses))})</b></div>
+        <div class="kv"><span>Juros totais pagos</span><b class="neg">${brl(sim.juros)}</b></div>
+        ${outro.ok?`<div class="kv"><span>Pelo outro método (${cfg.metodo==='avalanche'?'bola de neve':'avalanche'})</span><b>${outro.meses} meses · juros ${brl(outro.juros)}</b></div>`:''}
+      </div>
+      <h2>Ordem de quitação</h2>
+      <div class="card">${sim.ordem.map((d,i)=>`<div class="kv"><span>${i+1}º · ${esc(d.nome)} <small>(${fmtN(d.j*100)}% a.m.)</small></span><b>mês ${d.quit} · ${monthLabel(shiftMonth(monthKey(new Date()),d.quit))}</b></div>`).join('')}</div>`;
+      const meta=+cfg.metaMeses||12; const need=extraParaMeses(S.dividas,meta,cfg.metodo);
+      if(need!=null){ const faltaExtra=Math.max(0,need-(+cfg.extraSalario||0)); const corrDia=faltaExtra/liqCorrida()/diasUteisMes();
+        res+=`<h2>Meta: zerar em quantos meses?</h2><div class="card">
+          <div class="grid2"><span class="note">Quero quitar tudo em</span><input inputmode="numeric" data-ed="dividaCfg" data-f="metaMeses" data-k="int" value="${meta}"></div>
+          <p style="margin:10px 0 0;line-height:1.5">Para isso você precisa de <b>${brl(need)}/mês</b> além dos mínimos. Mantendo ${brl(+cfg.extraSalario||0)} do salário, o Uber precisa cobrir <b>${brl(faltaExtra)}/mês</b> ≈ <b>${fmtN(Math.ceil(corrDia*10)/10)} corrida(s) extra(s) por dia útil</b>${corrDia>corridasExtrasPossiveisDia()?' <span class="badge b-red">acima do que cabe até '+C().horaLimite+'</span>':` (encerrando ~${horaFim(Math.ceil(corrDia))})`}.</p></div>`; }
+    }
+  }
+  return topo('Parte 4 · Dívidas')+`
+  <div class="card">${items||'<div class="empty">Cadastre suas dívidas bancárias abaixo (cartão, cheque especial, empréstimo…).</div>'}
+    ${S.dividas.length?`<div class="total"><span>Total devido</span><span class="neg">${brl(sum(S.dividas,d=>+d.saldo))}</span></div>`:''}</div>
+  <div class="card"><label class="f" style="margin-top:0">Nova dívida</label>
+    <input id="nd-nome" placeholder="Ex.: Cartão Nubank, Empréstimo pessoal">
+    <div class="grid3" style="grid-template-columns:1fr 1fr 1fr;margin-top:6px"><input id="nd-saldo" inputmode="decimal" placeholder="Saldo"><input id="nd-juros" inputmode="decimal" placeholder="Juros % a.m."><input id="nd-parc" inputmode="decimal" placeholder="Parcela"></div>
+    <div class="btns" style="margin-top:8px"><button class="btn sec" data-a="add-div">Adicionar</button></div></div>
+  <h2>Estratégia</h2>
+  <div class="card">
+    <div class="seg"><button class="${cfg.metodo==='avalanche'?'on':''}" data-a="metodo" data-m="avalanche">Avalanche (maior juros)</button><button class="${cfg.metodo!=='avalanche'?'on':''}" data-a="metodo" data-m="bola">Bola de neve (menor saldo)</button></div>
+    <p class="note">${cfg.metodo==='avalanche'?'Ataca primeiro a dívida com juros mais altos: paga menos juros no total.':'Ataca primeiro a menor dívida: quita uma rápido e dá motivação.'}</p>
+    <div class="grid2"><div><label class="f">Extra do salário/mês (R$)</label><input inputmode="decimal" data-ed="dividaCfg" data-f="extraSalario" value="${cfg.extraSalario?fmtN(cfg.extraSalario):''}" placeholder="0,00"></div>
+    <div><label class="f">Corridas extras/dia p/ dívidas</label><input inputmode="decimal" data-ed="dividaCfg" data-f="corridasDia" value="${cfg.corridasDia?fmtN(cfg.corridasDia):''}" placeholder="0"></div></div>
+    <p class="note">Sobra do salário hoje: <b>${brl(r.sobraSalario)}</b>. O extra do salário já é descontado dela no Início.</p>
+  </div>${res}`;
+}
+
+function vPlanejar(){
+  const r=resumoMes(monthKey(new Date())); const cfg=C();
+  const p=ui.planRes;
+  let out='';
+  if(p){
+    const n=corridasPara(p.valor); const max=corridasMaxDia(); const ext=corridasExtrasPossiveisDia();
+    const dTraj=Math.ceil(n/cfg.corridasTrajeto); const dMax=Math.ceil(n/max);
+    const sobraLivre=Math.max(0,r.sobraSalario-r.recTotal-r.outrosGastos);
+    out+=`<div class="card"><div class="note">Objetivo</div><div style="font-size:20px;font-weight:800;margin:2px 0">${esc(p.nome)}</div><div style="font-size:26px;font-weight:800" class="pos">${brl(p.valor)}</div>
+      <p class="note" style="margin:6px 0 0">= <b>${n} corridas</b> de Uber (${brl(cfg.valorCorrida)} − ${cfg.custoPct}% de custo = ${brl(liqCorrida())} líquido cada)</p></div>
+    <div class="card">
+      <div class="plan"><h4>🚗 Plano A — só ida e volta do DNIT</h4><p>${cfg.corridasTrajeto} corridas/dia = ${brl(cfg.corridasTrajeto*liqCorrida())}/dia líquido.</p><p>Você conquista em <b>${dTraj} dias úteis</b> → <b>${brDate(addWorkdays(dTraj))}</b>, sem mudar nada na rotina.</p></div>
+      <div class="plan alt"><h4>🌙 Plano B — ida/volta + rodar até ${cfg.horaLimite}</h4><p>${cfg.corridasTrajeto} + ${fmtN(ext)} extras = ${fmtN(max)} corridas/dia (${brl(max*liqCorrida())}/dia).</p><p>Você conquista em <b>${dMax} dia(s) útil(eis)</b> → <b>${brDate(addWorkdays(dMax))}</b>.</p></div>`;
+    if(p.prazo){ const du=workdaysUntil(p.prazo);
+      if(du<=0) out+=`<div class="plan warnb"><h4>⏰ Com prazo</h4><p>O prazo ${brDate(p.prazo)} já passou ou é hoje.</p></div>`;
+      else { const porDia=n/du; const extras=Math.max(0,Math.ceil(porDia-cfg.corridasTrajeto));
+        if(porDia<=max) out+=`<div class="plan"><h4>⏰ Para chegar até ${brDate(p.prazo)} (${du} dias úteis)</h4><p>Precisa de <b>${fmtN(Math.ceil(porDia*10)/10)} corridas/dia</b>: ${extras>0?`ida e volta + <b>${extras} extra(s)</b>, encerrando por volta de <b>${horaFim(extras)}</b>.`:'só a ida e a volta já bastam.'}</p></div>`;
+        else { const cobreUber=du*max*liqCorrida(); const faltaSal=p.valor-cobreUber;
+          out+=`<div class="plan warnb"><h4>⏰ Para chegar até ${brDate(p.prazo)} (${du} dias úteis)</h4><p>Nem rodando todo dia até ${cfg.horaLimite} dá: o Uber cobre ${brl(cobreUber)}. Faltariam <b>${brl(faltaSal)}</b> da sobra do salário${faltaSal<=sobraLivre?' — cabe na sua sobra deste mês.':' — maior que a sobra; considere esticar o prazo.'}</p></div>`; } } }
+    const meses=sobraLivre>0?Math.ceil(p.valor/(sobraLivre*0.5)):null;
+    out+=`<div class="plan alt"><h4>💼 Plano C — guardar parte da sobra do salário</h4><p>Sobra livre estimada neste mês: <b>${brl(sobraLivre)}</b>.</p><p>${meses?`Guardando 50% dela (${brl(sobraLivre*0.5)}/mês), em <b>${meses} mês(es)</b>.`:'Hoje não há sobra livre do salário — o caminho é o Uber.'}</p></div>`;
+    const rec=(p.valor<=cfg.corridasTrajeto*liqCorrida()*10)?'o Plano A: em menos de duas semanas de ida e volta você paga, sem tocar no salário.':(p.prazo?'seguir o ritmo do prazo acima e registrar cada corrida no Início.':'combinar o Plano A todos os dias com 1–2 noites por semana até '+cfg.horaLimite+'.');
+    out+=`<div class="callout green" style="margin-top:12px">✅ <b>Recomendação:</b> ${rec}</div>
+      <div class="btns"><button class="btn full" data-a="plan-obj">Transformar em objetivo (parte 3)</button></div></div>`;
+  }
+  return topo('Parte 5 · Planejar')+`
+  <div class="card">
+    <label class="f" style="margin-top:0">O que você quer conquistar?</label>
+    <input id="pl-txt" value="${esc(ui.planText)}" placeholder="Ex.: quero comprar um boné de 150 reais">
+    <div class="chips"><button class="chip" data-a="chip" data-t="Passagem para Fortaleza">✈️ Passagem para Fortaleza</button><button class="chip" data-a="chip" data-t="Boné" data-v="150">🧢 Boné de R$ 150</button><button class="chip" data-a="chip" data-t="Roupas" data-v="500">👕 Roupas R$ 500</button></div>
+    <div class="grid2" style="margin-top:6px"><div><label class="f">Valor (R$)</label><input id="pl-valor" inputmode="decimal" value="${esc(ui.planValor)}" placeholder="Ex.: 1.200"></div>
+    <div><label class="f">Prazo (opcional)</label><input id="pl-prazo" type="date" value="${esc(ui.planPrazo)}"></div></div>
+    <div class="btns" style="margin-top:10px"><button class="btn full" data-a="planejar">Como conquistar?</button></div>
+  </div>${out}
+  <p class="note">Cálculo com: corrida ${brl(cfg.valorCorrida)}, custo ${cfg.custoPct}%, ${cfg.corridasTrajeto} corridas de trajeto, saída ${cfg.horaSaida}, limite ${cfg.horaLimite}, ${fmtN(cfg.corridasPorHora)} corrida(s)/hora, ${cfg.diasSemana} dias por semana. Ajuste em ⚙️ Configurar.</p>`;
+}
+
+function vRazao(){
+  const ls=mesL(ui.mes); let saldo=0;
+  const rows=ls.map(x=>{ saldo+= x.t==='C'?x.v:-x.v; return `<tr><td>${brDate(x.d).slice(0,5)}</td><td class="h">${esc(x.desc||nomeRef(x))}<small>${esc(nomeRef(x))}</small></td><td class="n neg">${x.t==='D'?fmtN(x.v):''}</td><td class="n pos">${x.t==='C'?fmtN(x.v):''}</td><td class="n">${fmtN(saldo)}</td><td><button class="btn ghost sm" data-a="del-lanc" data-id="${x.id}" style="padding:3px 7px">✕</button></td></tr>`; }).join('');
+  const r=resumoMes(ui.mes);
+  return topo('Razão D/C')+seletorMes()+`
+  <div class="card" style="overflow-x:auto">
+  ${ls.length?`<table class="razao"><thead><tr><th>Data</th><th>Histórico</th><th class="n">Débito</th><th class="n">Crédito</th><th class="n">Saldo</th><th></th></tr></thead><tbody>${rows}</tbody>
+  <tfoot><tr><td></td><td class="h">Totais</td><td class="n neg"><b>${fmtN(r.deb)}</b></td><td class="n pos"><b>${fmtN(r.cred)}</b></td><td class="n"><b>${fmtN(r.saldo)}</b></td><td></td></tr></tfoot></table>`:'<div class="empty">Sem lançamentos neste mês.</div>'}
+  </div>
+  <p class="note">Crédito = dinheiro que entra na sua conta (salário, Uber, Pix). Débito = dinheiro que sai (fixas, extras, aportes nos objetivos, dívidas).</p>
+  <div class="btns"><button class="btn" data-a="novo-lanc">＋ Novo lançamento</button><button class="btn ghost" data-a="tab" data-k="inicio">Voltar</button></div>`;
+}
+
+function vConfig(){
+  const c=C();
+  const f=(lbl,key,kind,ph)=>`<div><label class="f">${lbl}</label><input ${kind==='time'?'type="time"':'inputmode="decimal"'} data-ed="config" data-f="${key}" data-k="${kind||''}" value="${kind==='time'?esc(c[key]):fmtN(c[key])}" placeholder="${ph||''}"></div>`;
+  const url='https://claude.ai/artifact/SEU-LINK';
+  return topo('Configurar')+`
+  <h2>Renda</h2>
+  <div class="card"><div class="grid2">${f('Salário mensal (R$)','salario')}${f('Valor médio da corrida (R$)','valorCorrida')}
+    ${f('Custo por corrida (% combustível/desgaste)','custoPct')}${f('Corridas de trajeto/dia (ida+volta)','corridasTrajeto')}
+    ${f('Saída do DNIT','horaSaida','time')}${f('Até que horas rodar','horaLimite','time')}
+    ${f('Corridas por hora (noite)','corridasPorHora')}
+    <div><label class="f">Dias por semana rodando</label><select data-ed="config" data-f="diasSemana" data-k="int"><option value="5" ${c.diasSemana===5?'selected':''}>Seg a sex (5)</option><option value="6" ${c.diasSemana===6?'selected':''}>Seg a sáb (6)</option></select></div>
+  </div>
+  <p class="note">Com esses números: ${fmtN(corridasExtrasPossiveisDia())} corridas extras cabem por noite → até ${fmtN(corridasMaxDia())} corridas/dia = ${brl(corridasMaxDia()*liqCorrida())}/dia líquido.</p></div>
+
+  <h2>Atalhos no iPhone (PicPay → Meu Caixa)</h2>
+  <div class="card">
+    <p class="note" style="margin-top:0">O iPhone não deixa nenhum app ler as notificações do PicPay. Os caminhos abaixo usam o app <b>Atalhos</b>, que já vem no iPhone, para abrir o Meu Caixa com a pergunta na tela.</p>
+    <p style="margin:10px 0 4px;font-weight:700">1) Botão de Ação — 2 toques por lançamento</p>
+    <ol class="steps">
+      <li>App Atalhos → <b>+</b> → novo atalho “Lançar no Caixa”.</li>
+      <li>Ação <b>Escolher do Menu</b> com as opções <code>Pix recebido</code> e <code>Compra</code>.</li>
+      <li>Em cada opção: <b>Pedir Entrada</b> (tipo Número, “Valor em R$”) → <b>Calcular</b> “Entrada × 100” → <b>Arredondar número</b> → <b>Abrir URLs</b>:<br>Pix: <code>${APP_URL}#pix-</code>[número arredondado]<br>Compra: <code>${APP_URL}#compra-</code>[número arredondado]</li>
+      <li>Ajustes do iPhone → <b>Botão de Ação</b> → Atalho → “Lançar no Caixa”.</li>
+    </ol>
+    <p class="note">Ao ver a notificação do PicPay, aperte o Botão de Ação, escolha o tipo e digite o valor: o app abre perguntando “Deseja inserir como renda?” ou “Em qual parte do app?”.</p>
+    <p style="margin:12px 0 4px;font-weight:700">2) Automático para compras com Apple Pay</p>
+    <ol class="steps">
+      <li>Atalhos → <b>Automação</b> → <b>+</b> → <b>Transação</b> → escolha o cartão PicPay na Carteira → marque “Executar imediatamente”.</li>
+      <li>Ações: <b>Calcular</b> “Valor (da transação) × 100” → <b>Arredondar</b> → <b>Abrir URLs</b> <code>${APP_URL}#compra-</code>[número].</li>
+    </ol>
+    <p class="note">Só funciona para compras pagas por aproximação/Apple Pay com o cartão que está na Carteira. Pix recebido e compras feitas pelo app do PicPay continuam pelo Botão de Ação.</p>
+    <p class="note">Se o link abrir sem a pergunta (pode acontecer dentro do app Claude), abra o Meu Caixa pela tela de início e use “＋ Lançamento”.</p>
+    <div class="btns"><button class="btn sec sm" data-a="teste-pix">Testar: Pix de R$ 30</button><button class="btn sec sm" data-a="teste-compra">Testar: compra de R$ 45,90</button></div>
+  </div>
+
+  <h2>Backup</h2>
+  <div class="card"><p class="note" style="margin-top:0">${syncState==='nuvem'?'Seus dados estão salvos na sua conta Claude e aparecem em qualquer aparelho logado.':'Seus dados estão salvos neste aparelho.'} Faça backup de vez em quando.</p>
+    <div class="btns"><button class="btn ghost sm" data-a="exportar">Copiar backup</button><button class="btn ghost sm" data-a="importar">Restaurar backup</button></div></div>
+  <div class="btns"><button class="btn ghost" data-a="tab" data-k="inicio">Voltar</button></div>`;
+}
+
+const VIEWS={inicio:vInicio,fixas:vFixas,extras:vExtras,metas:vMetas,dividas:vDividas,planejar:vPlanejar,razao:vRazao,config:vConfig};
+function render(){ $('#app').innerHTML=(VIEWS[ui.tab]||vInicio)(); renderTabs(); }
+
+/* ================= eventos ================= */
+function novoLancModal(){
+  modal(`<h3>Novo lançamento</h3>
+    <div class="seg" id="m-tipo"><button class="on" data-a="m-tipo" data-t="D">Débito (saída)</button><button data-a="m-tipo" data-t="C">Crédito (entrada)</button></div>
+    <label class="f">Valor (R$)</label><input id="m-val" inputmode="decimal" placeholder="0,00">
+    <label class="f">Parte do app</label><select id="m-parte">${opcoesParte('variavel:'+(S.variaveis[0]||{}).id)}</select>
+    <label class="f">Descrição</label><input id="m-desc">
+    <label class="f">Data</label><input id="m-data" type="date" value="${today()}">
+    <div class="btns" style="margin-top:14px"><button class="btn ghost" data-a="close">Cancelar</button><button class="btn" data-a="m-salvar-lanc">Salvar</button></div>`);
+  window.__tipo='D';
+}
+function valorModal(titulo,cb,valorIni,descIni){
+  modal(`<h3>${titulo}</h3><label class="f">Valor (R$)</label><input id="m-val" inputmode="decimal" value="${valorIni?fmtN(valorIni):''}" placeholder="0,00">
+    <label class="f">Descrição</label><input id="m-desc" value="${esc(descIni||'')}">
+    <div class="btns" style="margin-top:14px"><button class="btn ghost" data-a="close">Cancelar</button><button class="btn" data-a="m-ok">Confirmar</button></div>`);
+  window.__cb=cb; setTimeout(()=>{ const i=$('#m-val'); if(i) i.focus(); },50);
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]'); if(!b) return;
+  const a=b.dataset.a, id=b.dataset.id;
+  if(a==='bg'){ if(e.target===b) closeModal(); return; }
+  switch(a){
+    case 'close': closeModal(); break;
+    case 'tab': ui.tab=b.dataset.k; render(); window.scrollTo(0,0); break;
+    case 'mes': ui.mes=shiftMonth(ui.mes,+b.dataset.d); render(); break;
+    case 'lanc-salario': valorModal('Lançar salário de '+monthLabel(ui.mes),(v,d)=>{ lancar({t:'C',v,desc:d||'Salário',p:'salario',data:ui.mes===monthKey(new Date())?today():ui.mes+'-05'}); toast('Salário lançado'); },C().salario,'Salário DNIT'); break;
+    case 'uber': lancar({t:'C',v:C().valorCorrida,desc:b.dataset.desc,p:'uber'}); toast('+'+brl(C().valorCorrida)+' Uber'); render(); break;
+    case 'uber-outro': valorModal('Corrida extra',(v,d)=>{ lancar({t:'C',v,desc:d||'Corrida extra',p:'uber'}); },C().valorCorrida,'Corrida extra'); break;
+    case 'analisar': { const t=$('#notif').value; const n=parseNotificacao(t);
+      if(!n.tipo && n.valor){ modal(`<h3>Notificação</h3><div class="amount">${brl(n.valor)}</div><p class="q">Isso foi uma entrada ou uma saída?</p><div class="btns"><button class="btn sec" data-a="forca" data-t="renda" data-v="${n.valor}">Entrada (renda)</button><button class="btn red" data-a="forca" data-t="despesa" data-v="${n.valor}">Saída (despesa)</button></div>`); window.__n=n; }
+      else perguntarNotificacao(n); break; }
+    case 'forca': { const n=window.__n||{}; n.tipo=b.dataset.t; n.valor=+b.dataset.v; perguntarNotificacao(n); break; }
+    case 'm-renda': { const p=$('#m-rt').value; lancar({t:'C',v:+b.dataset.v,desc:$('#m-desc').value,p}); closeModal(); const t=$('#notif'); if(t) t.value=''; toast('Renda inserida ✔'); render(); break; }
+    case 'm-desp': { const [p,r]=$('#m-parte').value.split(':'); const v=+b.dataset.v; lancar({t:'D',v,desc:$('#m-desc').value,p,r});
+      if(p==='divida'){ const d=S.dividas.find(x=>x.id===r); if(d){ d.saldo=Math.max(0,Math.round((d.saldo-v)*100)/100); saveEstado(); } }
+      closeModal(); const t=$('#notif'); if(t) t.value=''; toast('Despesa inserida ✔'); render(); break; }
+    case 'novo-lanc': novoLancModal(); break;
+    case 'm-tipo': { window.__tipo=b.dataset.t; document.querySelectorAll('#m-tipo button').forEach(x=>x.classList.toggle('on',x===b));
+      const sel=$('#m-parte'); sel.innerHTML= window.__tipo==='C'?opcoesRenda('pix'):opcoesParte('variavel:'+(S.variaveis[0]||{}).id); break; }
+    case 'm-salvar-lanc': { const v=num($('#m-val').value); if(v<=0){ toast('Informe o valor'); return; }
+      const raw=$('#m-parte').value; const data=$('#m-data').value||today(); const desc=$('#m-desc').value;
+      if(window.__tipo==='C') lancar({t:'C',v,desc,p:raw,data});
+      else { const [p,r]=raw.split(':'); lancar({t:'D',v,desc,p,r,data}); if(p==='divida'){ const d=S.dividas.find(x=>x.id===r); if(d){ d.saldo=Math.max(0,Math.round((d.saldo-v)*100)/100); saveEstado(); } } }
+      closeModal(); render(); break; }
+    case 'm-ok': { const v=num($('#m-val').value); if(v<=0){ toast('Informe o valor'); return; } const cb=window.__cb; closeModal(); cb&&cb(v,$('#m-desc')?$('#m-desc').value:''); render(); break; }
+    case 'pagar-fixa': { const f=S.fixas.find(x=>x.id===id); valorModal('Pagar '+esc(f.nome),(v,d)=>lancar({t:'D',v,desc:d||f.nome,p:'fixa',r:f.id,data:ui.mes===monthKey(new Date())?today():ui.mes+'-'+pad(Math.min(28,f.venc||1))}),f.valor,f.nome); break; }
+    case 'desfazer-fixa': { const x=mesL(ui.mes).filter(x=>x.p==='fixa'&&x.r===id); x.forEach(y=>apagarLanc(y.id)); render(); break; }
+    case 'add-fixa': { const n=$('#nf-nome').value.trim(); if(!n) return toast('Dê um nome'); S.fixas.push({id:uid(),nome:n,valor:num($('#nf-valor').value),venc:parseInt($('#nf-venc').value)||1}); saveEstado(); render(); break; }
+    case 'add-var': { const n=$('#nv-nome').value.trim(); if(!n) return toast('Dê um nome'); S.variaveis.push({id:uid(),nome:n,limite:num($('#nv-lim').value)}); saveEstado(); render(); break; }
+    case 'gasto': { const v=S.variaveis.find(x=>x.id===id); valorModal('Gasto em '+esc(v.nome),(val,d)=>lancar({t:'D',v:val,desc:d||v.nome,p:'variavel',r:v.id,data:ui.mes===monthKey(new Date())?today():ui.mes+'-15'}),0,''); break; }
+    case 'add-obj': { const n=$('#no-nome').value.trim(); const v=num($('#no-valor').value); if(!n||v<=0) return toast('Informe nome e valor'); S.objetivos.push({id:uid(),nome:n,valor:v,prazo:$('#no-prazo').value||'',concluido:false}); saveEstado(); render(); break; }
+    case 'aporte': { const o=S.objetivos.find(x=>x.id===id); valorModal('Guardar para '+esc(o.nome),(v,d)=>lancar({t:'D',v,desc:d||('Guardado: '+o.nome),p:'objetivo',r:o.id}),0,'Guardado: '+o.nome); break; }
+    case 'concluir': { const o=S.objetivos.find(x=>x.id===id); o.concluido=true; saveEstado(); toast('Parabéns! 🎉'); render(); break; }
+    case 'add-div': { const n=$('#nd-nome').value.trim(); const s=num($('#nd-saldo').value); if(!n||s<=0) return toast('Informe nome e saldo'); S.dividas.push({id:uid(),nome:n,saldo:s,juros:num($('#nd-juros').value),parcela:num($('#nd-parc').value)}); saveEstado(); render(); break; }
+    case 'pagar-div': { const d=S.dividas.find(x=>x.id===id); valorModal('Pagar '+esc(d.nome),(v,ds)=>{ lancar({t:'D',v,desc:ds||d.nome,p:'divida',r:d.id}); d.saldo=Math.max(0,Math.round((d.saldo-v)*100)/100); saveEstado(); },d.parcela,d.nome); break; }
+    case 'metodo': S.dividaCfg.metodo=b.dataset.m; saveEstado(); render(); break;
+    case 'del': { const col=b.dataset.col; const it=S[col].find(x=>x.id===id);
+      modal(`<h3>Excluir “${esc(it.nome)}”?</h3><p class="note">Os lançamentos já feitos continuam no razão.</p><div class="btns" style="margin-top:12px"><button class="btn ghost" data-a="close">Cancelar</button><button class="btn red" data-a="del-ok" data-col="${col}" data-id="${id}">Excluir</button></div>`); break; }
+    case 'del-ok': { const col=b.dataset.col; S[col]=S[col].filter(x=>x.id!==id); saveEstado(); closeModal(); render(); break; }
+    case 'del-lanc': apagarLanc(id); render(); break;
+    case 'chip': { ui.planText=b.dataset.t; ui.planValor=b.dataset.v||''; ui.planRes=null; render(); if(!b.dataset.v){ const i=$('#pl-valor'); i&&i.focus(); toast('Informe o valor estimado'); } else doPlanejar(); break; }
+    case 'planejar': doPlanejar(); break;
+    case 'plan-obj': { const p=ui.planRes; S.objetivos.push({id:uid(),nome:p.nome,valor:p.valor,prazo:p.prazo||'',concluido:false}); saveEstado(); ui.planRes=null; ui.planText=''; ui.planValor=''; ui.planPrazo=''; ui.tab='metas'; toast('Objetivo criado na parte 3'); render(); break; }
+    case 'teste-pix': perguntarNotificacao(parseNotificacao('Você recebeu um Pix de R$ 30,00 de Teste')); break;
+    case 'teste-compra': perguntarNotificacao(parseNotificacao('Compra aprovada de R$ 45,90 em PADARIA TESTE')); break;
+    case 'exportar': { const txt=JSON.stringify({S,L});
+      modal(`<h3>Backup</h3><p class="note">Copie o texto abaixo e guarde (ex.: no seu e-mail).</p><textarea id="bk" style="min-height:160px">${esc(txt)}</textarea><div class="btns" style="margin-top:10px"><button class="btn" data-a="copiar">Copiar</button><button class="btn ghost" data-a="close">Fechar</button></div>`); break; }
+    case 'copiar': { const t=$('#bk'); try{ navigator.clipboard.writeText(t.value).then(()=>toast('Copiado'),()=>{ t.select(); toast('Selecionado — copie manualmente'); }); }catch(err){ t.select(); toast('Selecionado — copie manualmente'); } break; }
+    case 'importar': modal(`<h3>Restaurar backup</h3><textarea id="bk" style="min-height:160px" placeholder="Cole o backup aqui"></textarea><div class="btns" style="margin-top:10px"><button class="btn ghost" data-a="close">Cancelar</button><button class="btn red" data-a="importar-ok">Substituir meus dados</button></div>`); break;
+    case 'importar-ok': { try{ const o=JSON.parse($('#bk').value); if(!o.S||!o.S.config) throw 0; S=Object.assign(defaultState(),o.S); L=o.L||{}; saveEstado(); Object.keys(L).forEach(k=>saveMes(k)); closeModal(); toast('Backup restaurado'); render(); }catch(err){ toast('Backup inválido'); } break; }
+  }
+});
+function doPlanejar(){
+  const txt=($('#pl-txt')||{}).value||ui.planText; let v=num(($('#pl-valor')||{}).value||'');
+  ui.planText=txt; ui.planPrazo=($('#pl-prazo')||{}).value||'';
+  if(!v){ const m=txt.match(/(?:R\$\s*)?(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(?:reais|real|conto|pila)?/i); if(m) v=num(m[1]); }
+  ui.planValor=v?fmtN(v):'';
+  if(!v){ toast('Informe o valor do objetivo'); render(); return; }
+  let nome=txt.replace(/(?:R\$\s*)?\d[\d.,]*\s*(reais|real|conto|pila)?/ig,'').replace(/^\s*(eu\s+)?(quero|queria|preciso|vou)\s+(comprar|juntar|fazer|pagar|ir)?\s*(um|uma|uns|umas|o|a)?\s*/i,'').replace(/\s+(de|por)\s*$/i,'').trim();
+  nome=nome? nome.charAt(0).toUpperCase()+nome.slice(1) : 'Meu objetivo';
+  ui.planRes={nome,valor:v,prazo:ui.planPrazo};
+  render();
+}
+document.addEventListener('change',e=>{
+  const el=e.target; if(!el.dataset||!el.dataset.ed) return;
+  const col=el.dataset.ed, f=el.dataset.f, k=el.dataset.k;
+  let val = k==='time' ? el.value : k==='int' ? (parseInt(el.value)||0) : num(el.value);
+  if(col==='config'||col==='dividaCfg'){ S[col][f]=val; }
+  else { const it=S[col].find(x=>x.id===el.dataset.id); if(it) it[f]=val; }
+  saveEstado(); render();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Enter' && e.target.id==='pl-txt'){ e.preventDefault(); doPlanejar(); } });
+window.addEventListener('hashchange',handleHash);
+
+/* ================= início ================= */
+loadLocal(); render(); handleHash(); initCloud();
+})();
+</script>
+</body>
+</html>
