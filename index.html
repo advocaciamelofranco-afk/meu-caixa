@@ -424,8 +424,8 @@ function vInicio(){
     <div class="kv"><span>Bruto</span><b>${brl(r.uberBruto)}</b></div>
     <div class="kv"><span>Líquido (−${cfg.custoPct}% combustível/desgaste)</span><b class="pos">${brl(r.uberLiq)}</b></div>
     <div class="btns" style="margin-top:10px">
-      <button class="btn sec sm" data-a="uber" data-desc="Ida DNIT">🚗 Ida DNIT +${brl(cfg.valorCorrida)}</button>
-      <button class="btn sec sm" data-a="uber" data-desc="Volta DNIT">🏠 Volta +${brl(cfg.valorCorrida)}</button>
+      <button class="btn sec sm" data-a="uber" data-desc="Ida DNIT">🚗 Ida DNIT</button>
+      <button class="btn sec sm" data-a="uber" data-desc="Volta DNIT">🏠 Volta DNIT</button>
       <button class="btn sec sm" data-a="uber-outro">+ Corrida extra</button>
     </div>
   </div>
@@ -707,7 +707,7 @@ document.addEventListener('click',e=>{
     case 'tab': ui.tab=b.dataset.k; render(); window.scrollTo(0,0); break;
     case 'mes': ui.mes=shiftMonth(ui.mes,+b.dataset.d); render(); break;
     case 'lanc-salario': valorModal('Lançar salário de '+monthLabel(ui.mes),(v,d)=>{ lancar({t:'C',v,desc:d||'Salário',p:'salario',data:ui.mes===monthKey(new Date())?today():ui.mes+'-05'}); toast('Salário lançado'); },C().salario,'Salário DNIT'); break;
-    case 'uber': lancar({t:'C',v:C().valorCorrida,desc:b.dataset.desc,p:'uber'}); toast('+'+brl(C().valorCorrida)+' Uber'); render(); break;
+    case 'uber': { const ds=b.dataset.desc; valorModal('Corrida '+ds,(v,d)=>{ lancar({t:'C',v,desc:d||ds,p:'uber'}); toast('+'+brl(v)+' Uber'); },0,ds); break; }
     case 'uber-outro': valorModal('Corrida extra',(v,d)=>{ lancar({t:'C',v,desc:d||'Corrida extra',p:'uber'}); },C().valorCorrida,'Corrida extra'); break;
     case 'analisar': { const t=$('#notif').value; const n=parseNotificacao(t);
       if(!n.tipo && n.valor){ modal(`<h3>Notificação</h3><div class="amount">${brl(n.valor)}</div><p class="q">Isso foi uma entrada ou uma saída?</p><div class="btns"><button class="btn sec" data-a="forca" data-t="renda" data-v="${n.valor}">Entrada (renda)</button><button class="btn red" data-a="forca" data-t="despesa" data-v="${n.valor}">Saída (despesa)</button></div>`); window.__n=n; }
