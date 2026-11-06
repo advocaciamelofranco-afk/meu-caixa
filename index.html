@@ -193,6 +193,22 @@ function flush(){
     }).catch(e=>{ setSync('erro'); if(e && e.code==='quota_exceeded') toast('Espaço de armazenamento cheio — exporte um backup.'); });
   });
 }
+function salvarAgora(){ lsSet('mc_estado',S); lsSet('mc_lanc',L); try{localStorage.setItem('mc_saved_at',String(Date.now()));}catch(e){} if(cloud){ dirty.add('estado'); Object.keys(L).forEach(k=>dirty.add('lanc-'+k)); flush(); } }
+function lsNum(k){ try{return +localStorage.getItem(k)||0;}catch(e){return 0;} }
+const NO_ARTEFATO=/claude|anthropic|usercontent/.test(location.hostname);
+function backupTexto(){ return JSON.stringify({app:'meu-caixa',salvoEm:new Date().toISOString(),S,L}); }
+async function salvarArquivo(){
+  const nome='meu-caixa-backup-'+today()+'.json';
+  const blob=new Blob([backupTexto()],{type:'application/json'});
+  try{
+    const file=new File([blob],nome,{type:'application/json'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:'Backup Meu Caixa'}); marcarBackup(); return true; }
+  }catch(e){ if(e && e.name==='AbortError') return false; }
+  if(NO_ARTEFATO) return false;
+  try{ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nome; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500); marcarBackup(); return true; }catch(e){ return false; }
+}
+function marcarBackup(){ try{localStorage.setItem('mc_backup_at',String(Date.now()));}catch(e){} toast('Cópia de segurança salva ✔'); }
+function restaurarDe(txt){ const o=JSON.parse(txt); if(!o.S||!o.S.config) throw 0; S=Object.assign(defaultState(),o.S); L=o.L||{}; salvarAgora(); }
 function saveEstado(){ markDirty('estado'); }
 function saveMes(mk){ markDirty('lanc-'+mk); }
 function setSync(s){ syncState=s; const el=$('#sync'); if(el) el.textContent=syncLabel(); }
@@ -389,7 +405,7 @@ function renderTabs(){
   $('#tabs').innerHTML=TABS.map(([k,ic,nm,n])=>`<button class="${ui.tab===k?'on':''}" data-a="tab" data-k="${k}"><span class="ic">${ic}</span>${nm}${n?`<span class="num">parte ${n}</span>`:''}</button>`).join('');
 }
 function topo(titulo){
-  return `<header class="top"><div class="brand"><span class="dot">R$</span>${titulo}</div><div class="sync" id="sync">${syncLabel()}</div></header>`;
+  return `<header class="top"><div class="brand"><span class="dot">R$</span>${titulo}</div><div style="display:flex;align-items:center;gap:8px"><div class="sync" id="sync">${syncLabel()}</div><button class="btn sm" data-a="salvar">💾 Salvar</button></div></header>`;
 }
 function seletorMes(){
   return `<div class="month"><button class="iconbtn" data-a="mes" data-d="-1">‹</button><b>${monthLabel(ui.mes)}</b><button class="iconbtn" data-a="mes" data-d="1">›</button></div>`;
@@ -416,6 +432,7 @@ function vInicio(){
       <div class="pill"><small>Débitos (saídas)</small><b>${brl(r.deb)}</b></div>
     </div>
   </div>
+  ${(()=>{ const b=lsNum('mc_backup_at'); const dias=b?Math.floor((Date.now()-b)/864e5):null; return (dias===null||dias>=7)?`<div class="callout amber">💾 ${dias===null?'Você ainda não salvou nenhuma cópia de segurança.':'Sua última cópia de segurança tem '+dias+' dias.'} <div class="btns" style="margin-top:8px"><button class="btn sm" data-a="salvar">Salvar agora</button></div></div>`:''; })()}
   ${!temSalario?`<div class="callout blue">O salário de ${monthLabel(ui.mes)} ainda não foi lançado. <div class="btns" style="margin-top:8px"><button class="btn sm" data-a="lanc-salario">Lançar salário</button></div></div>`:''}
 
   <h2>Uber — renda extra do mês</h2>
@@ -673,7 +690,9 @@ function vConfig(){
 
   <h2>Backup</h2>
   <div class="card"><p class="note" style="margin-top:0">${syncState==='nuvem'?'Seus dados estão salvos na sua conta Claude e aparecem em qualquer aparelho logado.':'Seus dados estão salvos neste aparelho.'} Faça backup de vez em quando.</p>
-    <div class="btns"><button class="btn ghost sm" data-a="exportar">Copiar backup</button><button class="btn ghost sm" data-a="importar">Restaurar backup</button></div></div>
+    <div class="btns"><button class="btn sm" data-a="salvar-arquivo">💾 Salvar cópia (arquivo)</button><button class="btn ghost sm" data-a="restaurar-arquivo">📂 Restaurar de arquivo</button></div>
+    <div class="btns" style="margin-top:8px"><button class="btn ghost sm" data-a="exportar">Copiar como texto</button><button class="btn ghost sm" data-a="importar">Colar texto</button></div>
+    <input type="file" id="bk-file" accept="application/json,.json,.txt" style="display:none"></div>
   <div class="btns"><button class="btn ghost" data-a="tab" data-k="inicio">Voltar</button></div>`;
 }
 
@@ -746,11 +765,18 @@ document.addEventListener('click',e=>{
     case 'plan-obj': { const p=ui.planRes; S.objetivos.push({id:uid(),nome:p.nome,valor:p.valor,prazo:p.prazo||'',concluido:false}); saveEstado(); ui.planRes=null; ui.planText=''; ui.planValor=''; ui.planPrazo=''; ui.tab='metas'; toast('Objetivo criado na parte 3'); render(); break; }
     case 'teste-pix': perguntarNotificacao(parseNotificacao('Você recebeu um Pix de R$ 30,00 de Teste')); break;
     case 'teste-compra': perguntarNotificacao(parseNotificacao('Compra aprovada de R$ 45,90 em PADARIA TESTE')); break;
-    case 'exportar': { const txt=JSON.stringify({S,L});
+    case 'salvar': { salvarAgora(); const t=new Date(); const b=lsNum('mc_backup_at');
+      modal(`<h3>✅ Alterações salvas</h3><p class="q">Tudo foi salvo ${syncState==='nuvem'?'na sua conta':'neste iPhone'} às <b>${pad(t.getHours())}:${pad(t.getMinutes())}</b>.</p>
+      <p class="note">Para não perder nada mesmo se o app for apagado ou o Safari for limpo, guarde também uma <b>cópia de segurança</b> (vai para Arquivos/iCloud Drive).${b?' Última cópia: '+brDate(isoDate(new Date(b)))+'.':''}</p>
+      <div class="btns" style="margin-top:12px"><button class="btn" data-a="salvar-arquivo">💾 Salvar cópia de segurança</button><button class="btn ghost" data-a="close">Fechar</button></div>`); break; }
+    case 'salvar-arquivo': salvarArquivo().then(ok=>{ if(ok) closeModal(); else { closeModal(); const txt=backupTexto();
+      modal(`<h3>Cópia de segurança</h3><p class="note">Copie o texto e guarde em Notas ou mande para seu e-mail.</p><textarea id="bk" style="min-height:160px">${esc(txt)}</textarea><div class="btns" style="margin-top:10px"><button class="btn" data-a="copiar">Copiar</button><button class="btn ghost" data-a="close">Fechar</button></div>`); } }); break;
+    case 'restaurar-arquivo': { const i=$('#bk-file'); if(i) i.click(); break; }
+    case 'exportar': { const txt=backupTexto();
       modal(`<h3>Backup</h3><p class="note">Copie o texto abaixo e guarde (ex.: no seu e-mail).</p><textarea id="bk" style="min-height:160px">${esc(txt)}</textarea><div class="btns" style="margin-top:10px"><button class="btn" data-a="copiar">Copiar</button><button class="btn ghost" data-a="close">Fechar</button></div>`); break; }
-    case 'copiar': { const t=$('#bk'); try{ navigator.clipboard.writeText(t.value).then(()=>toast('Copiado'),()=>{ t.select(); toast('Selecionado — copie manualmente'); }); }catch(err){ t.select(); toast('Selecionado — copie manualmente'); } break; }
+    case 'copiar': { const t=$('#bk'); try{ navigator.clipboard.writeText(t.value).then(()=>{toast('Copiado');marcarBackup();},()=>{ t.select(); toast('Selecionado — copie manualmente'); }); }catch(err){ t.select(); toast('Selecionado — copie manualmente'); } break; }
     case 'importar': modal(`<h3>Restaurar backup</h3><textarea id="bk" style="min-height:160px" placeholder="Cole o backup aqui"></textarea><div class="btns" style="margin-top:10px"><button class="btn ghost" data-a="close">Cancelar</button><button class="btn red" data-a="importar-ok">Substituir meus dados</button></div>`); break;
-    case 'importar-ok': { try{ const o=JSON.parse($('#bk').value); if(!o.S||!o.S.config) throw 0; S=Object.assign(defaultState(),o.S); L=o.L||{}; saveEstado(); Object.keys(L).forEach(k=>saveMes(k)); closeModal(); toast('Backup restaurado'); render(); }catch(err){ toast('Backup inválido'); } break; }
+    case 'importar-ok': { try{ restaurarDe($('#bk').value); closeModal(); toast('Backup restaurado'); render(); }catch(err){ toast('Backup inválido'); } break; }
   }
 });
 function doPlanejar(){
@@ -765,7 +791,8 @@ function doPlanejar(){
   render();
 }
 document.addEventListener('change',e=>{
-  const el=e.target; if(!el.dataset||!el.dataset.ed) return;
+  const el=e.target;
+  if(el.id==='bk-file' && el.files && el.files[0]){ const r=new FileReader(); r.onload=()=>{ try{ restaurarDe(String(r.result)); toast('Backup restaurado ✔'); render(); }catch(err){ toast('Arquivo de backup inválido'); } }; r.readAsText(el.files[0]); el.value=''; return; } if(!el.dataset||!el.dataset.ed) return;
   const col=el.dataset.ed, f=el.dataset.f, k=el.dataset.k;
   let val = k==='time' ? el.value : k==='int' ? (parseInt(el.value)||0) : num(el.value);
   if(col==='config'||col==='dividaCfg'){ S[col][f]=val; }
@@ -777,6 +804,8 @@ window.addEventListener('hashchange',handleHash);
 
 /* ================= início ================= */
 loadLocal(); render(); handleHash(); initCloud();
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden'){ lsSet('mc_estado',S); lsSet('mc_lanc',L); flush(); } });
 })();
 </script>
 </body>
