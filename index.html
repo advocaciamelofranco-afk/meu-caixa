@@ -247,7 +247,7 @@ async function initCloud(){
 const C = () => S.config;
 const liqCorrida = () => C().valorCorrida*(1-C().custoPct/100);
 const mesL = mk => L[mk]||(L[mk]=[]);
-function allL(){ return Object.values(L).flat(); }
+function allL(){ return Object.values(L).flat().filter(x=>!x.prov); }
 function sum(arr,f){ return arr.reduce((a,x)=>a+(f?f(x):x),0); }
 function corridasExtrasPossiveisDia(){
   const h=Math.max(0,(hm2min(C().horaLimite)-hm2min(C().horaSaida))/60);
@@ -265,7 +265,7 @@ function addWorkdays(n){ const d=new Date(); d.setHours(12,0,0,0); let c=0; if(n
 function horaFim(extrasNoDia){ return min2hm(hm2min(C().horaSaida)+ (extrasNoDia/C().corridasPorHora)*60); }
 
 function resumoMes(mk){
-  const ls=mesL(mk);
+  const ls=mesL(mk).filter(x=>!x.prov);
   const cred=sum(ls.filter(x=>x.t==='C'),x=>x.v), deb=sum(ls.filter(x=>x.t==='D'),x=>x.v);
   const salarioRec=sum(ls.filter(x=>x.t==='C'&&x.p==='salario'),x=>x.v);
   const uberL=ls.filter(x=>x.t==='C'&&x.p==='uber');
@@ -378,16 +378,39 @@ function perguntarNotificacao(n){
 }
 
 /* ================= lançamentos ================= */
-function lancar({t,v,desc,p,r,data}){
+function lancar({t,v,desc,p,r,data,prov}){
   data=data||today(); const mk=data.slice(0,7);
-  mesL(mk).push({id:uid(),d:data,t,v:Math.round(v*100)/100,desc:desc||'',p,r:r||''});
+  const it={id:uid(),d:data,t,v:Math.round(v*100)/100,desc:desc||'',p,r:r||''}; if(prov) it.prov=true;
+  mesL(mk).push(it);
   mesL(mk).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
   saveMes(mk);
+}
+function acharLanc(id){ for(const mk of Object.keys(L)){ const x=L[mk].find(x=>x.id===id); if(x) return {mk,x}; } return null; }
+function ajustaDivida(x,sinal){ if(x.p!=='divida'||x.prov||x.t!=='D') return; const d=S.dividas.find(d=>d.id===x.r); if(d){ d.saldo=Math.max(0,Math.round((+d.saldo+sinal*x.v)*100)/100); saveEstado(); } }
+function editarLanc(id,novo){
+  const f=acharLanc(id); if(!f) return; const {mk,x}=f;
+  ajustaDivida(x,+1);
+  Object.assign(x,novo); x.r=x.r||'';
+  ajustaDivida(x,-1);
+  const nmk=x.d.slice(0,7);
+  if(nmk!==mk){ L[mk]=L[mk].filter(y=>y.id!==id); mesL(nmk).push(x); saveMes(mk); }
+  mesL(nmk).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0); saveMes(nmk);
+}
+function editarLancModal(id){
+  const f=acharLanc(id); if(!f) return; const x=f.x;
+  window.__tipo=x.t; window.__editId=id;
+  modal(`<h3>Editar lançamento</h3>
+    <div class="seg" id="m-tipo"><button class="${x.t==='D'?'on':''}" data-a="m-tipo" data-t="D">Débito (saída)</button><button class="${x.t==='C'?'on':''}" data-a="m-tipo" data-t="C">Crédito (entrada)</button></div>
+    <label class="f">Valor (R$)</label><input id="m-val" inputmode="decimal" value="${fmtN(x.v)}">
+    <label class="f">Parte do app</label><select id="m-parte">${x.t==='C'?opcoesRenda(x.p):opcoesParte(x.p+':'+(x.r||''))}</select>
+    <label class="f">Descrição</label><input id="m-desc" value="${esc(x.desc)}">
+    <label class="f">Data</label><input id="m-data" type="date" value="${x.d}">
+    <div class="btns" style="margin-top:14px"><button class="btn red" data-a="m-del-edit">Excluir</button><button class="btn ghost" data-a="close">Cancelar</button><button class="btn" data-a="m-salvar-edit">Salvar</button></div>`);
 }
 function apagarLanc(id){
   for(const mk of Object.keys(L)){ const i=L[mk].findIndex(x=>x.id===id); if(i>=0){
     const x=L[mk][i];
-    if(x.p==='divida'){ const d=S.dividas.find(d=>d.id===x.r); if(d){ d.saldo=Math.round((+d.saldo+x.v)*100)/100; saveEstado(); } }
+    if(x.p==='divida' && !x.prov && x.t==='D'){ const d=S.dividas.find(d=>d.id===x.r); if(d){ d.saldo=Math.round((+d.saldo+x.v)*100)/100; saveEstado(); } }
     L[mk].splice(i,1); saveMes(mk); return; } }
 }
 function nomeRef(x){
@@ -405,7 +428,7 @@ function renderTabs(){
   $('#tabs').innerHTML=TABS.map(([k,ic,nm,n])=>`<button class="${ui.tab===k?'on':''}" data-a="tab" data-k="${k}"><span class="ic">${ic}</span>${nm}${n?`<span class="num">parte ${n}</span>`:''}</button>`).join('');
 }
 function topo(titulo){
-  return `<header class="top"><div class="brand"><span class="dot">R$</span>${titulo}</div><div style="display:flex;align-items:center;gap:8px"><div class="sync" id="sync">${syncLabel()}</div><button class="btn sm" data-a="salvar">💾 Salvar</button></div></header>`;
+  return `<header class="top"><div class="brand"><span class="dot">R$</span>${titulo}</div><div class="sync" id="sync">${syncLabel()}</div></header>`;
 }
 function seletorMes(){
   return `<div class="month"><button class="iconbtn" data-a="mes" data-d="-1">‹</button><b>${monthLabel(ui.mes)}</b><button class="iconbtn" data-a="mes" data-d="1">›</button></div>`;
@@ -432,7 +455,6 @@ function vInicio(){
       <div class="pill"><small>Débitos (saídas)</small><b>${brl(r.deb)}</b></div>
     </div>
   </div>
-  ${(()=>{ const b=lsNum('mc_backup_at'); const dias=b?Math.floor((Date.now()-b)/864e5):null; return (dias===null||dias>=7)?`<div class="callout amber">💾 ${dias===null?'Você ainda não salvou nenhuma cópia de segurança.':'Sua última cópia de segurança tem '+dias+' dias.'} <div class="btns" style="margin-top:8px"><button class="btn sm" data-a="salvar">Salvar agora</button></div></div>`:''; })()}
   ${!temSalario?`<div class="callout blue">O salário de ${monthLabel(ui.mes)} ainda não foi lançado. <div class="btns" style="margin-top:8px"><button class="btn sm" data-a="lanc-salario">Lançar salário</button></div></div>`:''}
 
   <h2>Uber — renda extra do mês</h2>
@@ -441,9 +463,7 @@ function vInicio(){
     <div class="kv"><span>Bruto</span><b>${brl(r.uberBruto)}</b></div>
     <div class="kv"><span>Líquido (−${cfg.custoPct}% combustível/desgaste)</span><b class="pos">${brl(r.uberLiq)}</b></div>
     <div class="btns" style="margin-top:10px">
-      <button class="btn sec sm" data-a="uber" data-desc="Ida DNIT">🚗 Ida DNIT</button>
-      <button class="btn sec sm" data-a="uber" data-desc="Volta DNIT">🏠 Volta DNIT</button>
-      <button class="btn sec sm" data-a="uber-outro">+ Corrida extra</button>
+      <button class="btn sec sm" data-a="uber-outro">🚗 + Registrar corrida</button>
     </div>
   </div>
 
@@ -506,7 +526,10 @@ function vExtras(){
       <div class="acts"><button class="btn sm" data-a="gasto" data-id="${v.id}">+ Gasto</button><button class="btn ghost sm" data-a="del" data-col="variaveis" data-id="${v.id}">✕</button></div>
       <div class="sub" style="display:flex;justify-content:space-between;align-items:center"><span>Gasto <b class="${over?'neg':''}">${brl(g)}</b> de limite</span><input class="inl" inputmode="decimal" data-ed="variaveis" data-id="${v.id}" data-f="limite" value="${v.limite?fmtN(v.limite):''}" placeholder="limite"></div>
       ${v.limite>0?`<div class="bar"><i class="${over?'over':''}" style="width:${pct}%"></i></div>`:''}</div>`; }).join('');
-  const lst=ls.filter(x=>x.p==='variavel').slice().reverse().map(x=>`<div class="item"><div><div class="nm">${esc(x.desc||'Gasto')}</div></div><div class="acts"><b class="neg">${brl(x.v)}</b><button class="btn ghost sm" data-a="del-lanc" data-id="${x.id}">✕</button></div><div class="sub">${brDate(x.d)} · ${esc(nomeRef(x))}</div></div>`).join('');
+  const lst=ls.filter(x=>x.p==='variavel').slice().reverse().map(x=>`<div class="item"><div><div class="nm">${esc(x.desc||'Gasto')}</div></div><div class="acts"><b class="neg">${brl(x.v)}</b><button class="btn ghost sm" data-a="edit-lanc" data-id="${x.id}">✏️</button></div><div class="sub">${brDate(x.d)} · ${esc(nomeRef(x))} · <span class="badge b-ok">Lançado no razão</span></div></div>`).join('');
+  const provs=mesL(ui.mes).filter(x=>x.prov&&x.p==='variavel');
+  const totProv=sum(provs,x=>x.v);
+  const lstProv=provs.map(x=>`<div class="item"><div><div class="nm">${esc(x.desc||'Gasto')}</div></div><div class="acts"><b class="warn">${brl(x.v)}</b></div><div class="sub">${brDate(x.d)} · ${esc(nomeRef(x))} · <span class="badge b-pend">Previsto</span></div><div class="sub acts" style="justify-content:flex-start"><button class="btn sm" data-a="efetivar" data-id="${x.id}">✔ Lançar definitivo</button><button class="btn ghost sm" data-a="edit-lanc" data-id="${x.id}">✏️ Editar</button><button class="btn ghost sm" data-a="del-lanc" data-id="${x.id}">✕</button></div></div>`).join('');
   return topo('Parte 2 · Extras')+seletorMes()+`
   <div class="card">${cats}
     <div class="total"><span>Total de extras no mês</span><span class="neg">${brl(r.extras)}</span></div>
@@ -515,8 +538,12 @@ function vExtras(){
   <div class="card"><label class="f" style="margin-top:0">Nova categoria de extras</label>
     <div class="grid2"><input id="nv-nome" placeholder="Ex.: Delivery, Bar"><input id="nv-lim" inputmode="decimal" placeholder="Limite mensal"></div>
     <div class="btns" style="margin-top:8px"><button class="btn sec" data-a="add-var">Adicionar</button></div></div>
-  <h2>Lançamentos de ${monthLabel(ui.mes)}</h2>
-  <div class="card">${lst||'<div class="empty">Nenhum gasto extra ainda.</div>'}</div>
+  ${provs.length?`<h2>Previstos — ainda não lançados</h2>
+  <div class="card">${lstProv}<div class="total"><span>Total previsto</span><span class="warn">${brl(totProv)}</span></div>
+    <p class="note" style="margin:6px 0 0">Previstos não entram no razão nem nos totais. Toque em “Lançar definitivo” quando o gasto acontecer.</p>
+    <div class="btns" style="margin-top:8px"><button class="btn sec sm" data-a="efetivar-todos">✔ Lançar todos como definitivos</button></div></div>`:''}
+  <h2>Lançados no razão (débito) — ${monthLabel(ui.mes)}</h2>
+  <div class="card">${lst||'<div class="empty">Nenhum gasto extra lançado ainda.</div>'}</div>
   <h2>Fechamento da parte 2</h2>
   <div class="card"><div class="kv"><span>Extras gastos</span><b class="neg">${brl(r.extras)}</b></div><div class="kv"><span>Renda extra do mês (Uber líquido + Pix)</span><b class="pos">${brl(r.rendaExtra)}</b></div></div>
   ${caixaRecompor(r.rec2,'Quanto recompor para não gastar o salário',`Extras que passaram da renda extra.`)}`;
@@ -641,15 +668,15 @@ function vPlanejar(){
 }
 
 function vRazao(){
-  const ls=mesL(ui.mes); let saldo=0;
-  const rows=ls.map(x=>{ saldo+= x.t==='C'?x.v:-x.v; return `<tr><td>${brDate(x.d).slice(0,5)}</td><td class="h">${esc(x.desc||nomeRef(x))}<small>${esc(nomeRef(x))}</small></td><td class="n neg">${x.t==='D'?fmtN(x.v):''}</td><td class="n pos">${x.t==='C'?fmtN(x.v):''}</td><td class="n">${fmtN(saldo)}</td><td><button class="btn ghost sm" data-a="del-lanc" data-id="${x.id}" style="padding:3px 7px">✕</button></td></tr>`; }).join('');
+  const ls=mesL(ui.mes).filter(x=>!x.prov); let saldo=0;
+  const rows=ls.map(x=>{ saldo+= x.t==='C'?x.v:-x.v; return `<tr><td>${brDate(x.d).slice(0,5)}</td><td class="h">${esc(x.desc||nomeRef(x))}<small>${esc(nomeRef(x))}</small></td><td class="n neg">${x.t==='D'?fmtN(x.v):''}</td><td class="n pos">${x.t==='C'?fmtN(x.v):''}</td><td class="n">${fmtN(saldo)}</td><td><button class="btn ghost sm" data-a="edit-lanc" data-id="${x.id}" style="padding:3px 7px">✏️</button></td></tr>`; }).join('');
   const r=resumoMes(ui.mes);
   return topo('Razão D/C')+seletorMes()+`
   <div class="card" style="overflow-x:auto">
   ${ls.length?`<table class="razao"><thead><tr><th>Data</th><th>Histórico</th><th class="n">Débito</th><th class="n">Crédito</th><th class="n">Saldo</th><th></th></tr></thead><tbody>${rows}</tbody>
   <tfoot><tr><td></td><td class="h">Totais</td><td class="n neg"><b>${fmtN(r.deb)}</b></td><td class="n pos"><b>${fmtN(r.cred)}</b></td><td class="n"><b>${fmtN(r.saldo)}</b></td><td></td></tr></tfoot></table>`:'<div class="empty">Sem lançamentos neste mês.</div>'}
   </div>
-  <p class="note">Crédito = dinheiro que entra na sua conta (salário, Uber, Pix). Débito = dinheiro que sai (fixas, extras, aportes nos objetivos, dívidas).</p>
+  <p class="note">Toque em ✏️ para editar ou excluir um lançamento. Crédito = dinheiro que entra na sua conta (salário, Uber, Pix). Débito = dinheiro que sai (fixas, extras, aportes nos objetivos, dívidas).</p>
   <div class="btns"><button class="btn" data-a="novo-lanc">＋ Novo lançamento</button><button class="btn ghost" data-a="tab" data-k="inicio">Voltar</button></div>`;
 }
 
@@ -727,7 +754,7 @@ document.addEventListener('click',e=>{
     case 'mes': ui.mes=shiftMonth(ui.mes,+b.dataset.d); render(); break;
     case 'lanc-salario': valorModal('Lançar salário de '+monthLabel(ui.mes),(v,d)=>{ lancar({t:'C',v,desc:d||'Salário',p:'salario',data:ui.mes===monthKey(new Date())?today():ui.mes+'-05'}); toast('Salário lançado'); },C().salario,'Salário DNIT'); break;
     case 'uber': { const ds=b.dataset.desc; valorModal('Corrida '+ds,(v,d)=>{ lancar({t:'C',v,desc:d||ds,p:'uber'}); toast('+'+brl(v)+' Uber'); },0,ds); break; }
-    case 'uber-outro': valorModal('Corrida extra',(v,d)=>{ lancar({t:'C',v,desc:d||'Corrida extra',p:'uber'}); },C().valorCorrida,'Corrida extra'); break;
+    case 'uber-outro': valorModal('Registrar corrida',(v,d)=>{ lancar({t:'C',v,desc:d||'Corrida Uber',p:'uber'}); toast('+'+brl(v)+' Uber'); },0,'Corrida Uber'); break;
     case 'analisar': { const t=$('#notif').value; const n=parseNotificacao(t);
       if(!n.tipo && n.valor){ modal(`<h3>Notificação</h3><div class="amount">${brl(n.valor)}</div><p class="q">Isso foi uma entrada ou uma saída?</p><div class="btns"><button class="btn sec" data-a="forca" data-t="renda" data-v="${n.valor}">Entrada (renda)</button><button class="btn red" data-a="forca" data-t="despesa" data-v="${n.valor}">Saída (despesa)</button></div>`); window.__n=n; }
       else perguntarNotificacao(n); break; }
@@ -749,7 +776,24 @@ document.addEventListener('click',e=>{
     case 'desfazer-fixa': { const x=mesL(ui.mes).filter(x=>x.p==='fixa'&&x.r===id); x.forEach(y=>apagarLanc(y.id)); render(); break; }
     case 'add-fixa': { const n=$('#nf-nome').value.trim(); if(!n) return toast('Dê um nome'); S.fixas.push({id:uid(),nome:n,valor:num($('#nf-valor').value),venc:parseInt($('#nf-venc').value)||1}); saveEstado(); render(); break; }
     case 'add-var': { const n=$('#nv-nome').value.trim(); if(!n) return toast('Dê um nome'); S.variaveis.push({id:uid(),nome:n,limite:num($('#nv-lim').value)}); saveEstado(); render(); break; }
-    case 'gasto': { const v=S.variaveis.find(x=>x.id===id); valorModal('Gasto em '+esc(v.nome),(val,d)=>lancar({t:'D',v:val,desc:d||v.nome,p:'variavel',r:v.id,data:ui.mes===monthKey(new Date())?today():ui.mes+'-15'}),0,''); break; }
+    case 'gasto': { const v=S.variaveis.find(x=>x.id===id);
+      modal(`<h3>Gasto em ${esc(v.nome)}</h3><label class="f">Valor (R$)</label><input id="m-val" inputmode="decimal" placeholder="0,00">
+        <label class="f">Descrição</label><input id="m-desc">
+        <label class="f">Data</label><input id="m-data" type="date" value="${ui.mes===monthKey(new Date())?today():ui.mes+'-15'}">
+        <div class="btns" style="margin-top:14px"><button class="btn ghost" data-a="m-gasto" data-id="${v.id}" data-prov="1">Só previsto</button><button class="btn" data-a="m-gasto" data-id="${v.id}">✔ Lançar definitivo</button></div>
+        <p class="note">“Lançar definitivo” vai direto para o razão (débito). “Só previsto” fica guardado na parte 2 até você confirmar.</p>`);
+      setTimeout(()=>{ const i=$('#m-val'); if(i) i.focus(); },50); break; }
+    case 'm-gasto': { const v=S.variaveis.find(x=>x.id===id); const val=num($('#m-val').value); if(val<=0){ toast('Informe o valor'); return; }
+      const prov=!!b.dataset.prov; lancar({t:'D',v:val,desc:$('#m-desc').value||v.nome,p:'variavel',r:v.id,data:$('#m-data').value||today(),prov});
+      closeModal(); toast(prov?'Gasto previsto salvo':'Lançado no razão ✔'); render(); break; }
+    case 'efetivar': { const f=acharLanc(id); if(f){ delete f.x.prov; saveMes(f.mk); toast('Lançado no razão ✔'); } render(); break; }
+    case 'efetivar-todos': { mesL(ui.mes).forEach(x=>{ if(x.prov&&x.p==='variavel') delete x.prov; }); saveMes(ui.mes); toast('Todos lançados no razão ✔'); render(); break; }
+    case 'edit-lanc': editarLancModal(id); break;
+    case 'm-salvar-edit': { const v=num($('#m-val').value); if(v<=0){ toast('Informe o valor'); return; }
+      const raw=$('#m-parte').value; const novo={t:window.__tipo,v:Math.round(v*100)/100,desc:$('#m-desc').value,d:$('#m-data').value||today()};
+      if(window.__tipo==='C'){ novo.p=raw; novo.r=''; } else { const [pp,rr]=raw.split(':'); novo.p=pp; novo.r=rr||''; }
+      editarLanc(window.__editId,novo); closeModal(); toast('Lançamento atualizado'); render(); break; }
+    case 'm-del-edit': apagarLanc(window.__editId); closeModal(); toast('Lançamento excluído'); render(); break;
     case 'add-obj': { const n=$('#no-nome').value.trim(); const v=num($('#no-valor').value); if(!n||v<=0) return toast('Informe nome e valor'); S.objetivos.push({id:uid(),nome:n,valor:v,prazo:$('#no-prazo').value||'',concluido:false}); saveEstado(); render(); break; }
     case 'aporte': { const o=S.objetivos.find(x=>x.id===id); valorModal('Guardar para '+esc(o.nome),(v,d)=>lancar({t:'D',v,desc:d||('Guardado: '+o.nome),p:'objetivo',r:o.id}),0,'Guardado: '+o.nome); break; }
     case 'concluir': { const o=S.objetivos.find(x=>x.id===id); o.concluido=true; saveEstado(); toast('Parabéns! 🎉'); render(); break; }
