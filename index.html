@@ -428,7 +428,7 @@ function renderTabs(){
   $('#tabs').innerHTML=TABS.map(([k,ic,nm,n])=>`<button class="${ui.tab===k?'on':''}" data-a="tab" data-k="${k}"><span class="ic">${ic}</span>${nm}${n?`<span class="num">parte ${n}</span>`:''}</button>`).join('');
 }
 function topo(titulo){
-  return `<header class="top"><div class="brand"><span class="dot">R$</span>${titulo}</div><div class="sync" id="sync">${syncLabel()}</div></header>`;
+  return `<header class="top"><div class="brand"><span class="dot">R$</span>${titulo}</div></header>`;
 }
 function seletorMes(){
   return `<div class="month"><button class="iconbtn" data-a="mes" data-d="-1">‹</button><b>${monthLabel(ui.mes)}</b><button class="iconbtn" data-a="mes" data-d="1">›</button></div>`;
@@ -457,15 +457,6 @@ function vInicio(){
   </div>
   ${!temSalario?`<div class="callout blue">O salário de ${monthLabel(ui.mes)} ainda não foi lançado. <div class="btns" style="margin-top:8px"><button class="btn sm" data-a="lanc-salario">Lançar salário</button></div></div>`:''}
 
-  <h2>Uber — renda extra do mês</h2>
-  <div class="card">
-    <div class="kv"><span>Corridas registradas</span><b>${r.nCorridas}</b></div>
-    <div class="kv"><span>Bruto</span><b>${brl(r.uberBruto)}</b></div>
-    <div class="kv"><span>Líquido (−${cfg.custoPct}% combustível/desgaste)</span><b class="pos">${brl(r.uberLiq)}</b></div>
-    <div class="btns" style="margin-top:10px">
-      <button class="btn sec sm" data-a="uber-outro">🚗 + Registrar corrida</button>
-    </div>
-  </div>
 
   <h2>Salário — para onde vai</h2>
   <div class="card">
@@ -715,11 +706,6 @@ function vConfig(){
     <div class="btns"><button class="btn sec sm" data-a="teste-pix">Testar: Pix de R$ 30</button><button class="btn sec sm" data-a="teste-compra">Testar: compra de R$ 45,90</button></div>
   </div>
 
-  <h2>Backup</h2>
-  <div class="card"><p class="note" style="margin-top:0">${syncState==='nuvem'?'Seus dados estão salvos na sua conta Claude e aparecem em qualquer aparelho logado.':'Seus dados estão salvos neste aparelho.'} Faça backup de vez em quando.</p>
-    <div class="btns"><button class="btn sm" data-a="salvar-arquivo">💾 Salvar cópia (arquivo)</button><button class="btn ghost sm" data-a="restaurar-arquivo">📂 Restaurar de arquivo</button></div>
-    <div class="btns" style="margin-top:8px"><button class="btn ghost sm" data-a="exportar">Copiar como texto</button><button class="btn ghost sm" data-a="importar">Colar texto</button></div>
-    <input type="file" id="bk-file" accept="application/json,.json,.txt" style="display:none"></div>
   <div class="btns"><button class="btn ghost" data-a="tab" data-k="inicio">Voltar</button></div>`;
 }
 
